@@ -175,6 +175,7 @@ public class Main extends ListenerAdapter {
                 }
                 File img = genGraph(collection, graphUser);
                 event.reply(event.getUser().getAsMention()).addFiles(FileUpload.fromData(img)).queue();
+                img.delete();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
