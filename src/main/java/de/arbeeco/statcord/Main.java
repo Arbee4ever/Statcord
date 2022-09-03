@@ -9,6 +9,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Updates;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
@@ -27,7 +28,7 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.FileUpload;
-import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.jetbrains.annotations.NotNull;
@@ -62,7 +63,7 @@ public class Main extends ListenerAdapter {
                 .addEventListeners(new Main())
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES)
                 .setChunkingFilter(ChunkingFilter.ALL)
-                .disableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.VOICE_STATE)
+                .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .setEventPassthrough(true)
                 .setActivity(Activity.watching("ARBEE's code."))
                 .build();
@@ -155,26 +156,32 @@ public class Main extends ListenerAdapter {
         if (event.getName().equals("score")) {
             if (event.getOption("user") != null) {
                 if (event.getOption("user").getAsUser().isBot()) {
-                    event.reply("User is a bot and has no score.").queue();
+                    event.replyEmbeds(new EmbedBuilder().setDescription("User is a bot and has no score.").build()).queue();
                     return;
                 }
-                event.reply(event.getOption("user").getAsUser().getAsMention() + "'s current Score is: " + collection.find(eq("id", event.getOption("user").getAsUser().getId())).first().getInteger("score").toString()).queue();
+                event.replyEmbeds(new EmbedBuilder().setDescription(event.getOption("user").getAsUser().getAsMention() + "'s current Score is: " + collection.find(eq("id", event.getOption("user").getAsUser().getId())).first().getInteger("score").toString()).build()).queue();
                 return;
             }
-            event.reply(event.getMember().getAsMention() + "'s current Score is: " + collection.find(eq("id", user.getId())).first().getInteger("score").toString()).queue();
+            event.replyEmbeds(new EmbedBuilder().setDescription(event.getMember().getAsMention() + "'s current Score is: " + collection.find(eq("id", user.getId())).first().getInteger("score").toString()).build()).queue();
         } else if (event.getName().equals("graph")) {
             try {
-                Member[] graphUser = {event.getMember()};
+                List<Member> graphUser = List.of(event.getMember());
                 if (event.getOption("role") != null) {
-                    for (int i = 0; i < guild.getMembersWithRoles(event.getOption("role").getAsRole()).size(); i++) {
-                        if (guild.getMembersWithRoles(event.getOption("role").getAsRole()).get(i).getUser().isBot()) return;
-                        graphUser[i] = guild.getMembersWithRoles(event.getOption("role").getAsRole()).get(i);
+                    if (event.getOption("role").getAsString().equals(guild.getId())) {
+                        graphUser = guild.getMembers();
+                    } else {
+                        graphUser = guild.getMembersWithRoles(event.getOption("role").getAsRole());
                     }
                 } else if (event.getOption("user") != null) {
-                    graphUser[0] = event.getOption("user").getAsMember();
+                    graphUser = List.of(event.getOption("user").getAsMember());
                 }
                 File img = genGraph(collection, graphUser);
-                event.reply(event.getUser().getAsMention()).addFiles(FileUpload.fromData(img)).queue();
+                event.replyFiles(FileUpload.fromData(img))
+                        .addEmbeds(new EmbedBuilder()
+                                .setDescription(event.getUser().getAsMention() + " " + collection.find(eq("id", user.getId())).first().getDate("lastmodified"))
+                                .setImage("attachment://graph.png")
+                                .build())
+                        .queue();
                 img.delete();
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -183,10 +190,10 @@ public class Main extends ListenerAdapter {
             if (event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
                 deleteAllData(event.getGuild());
                 initNewData(event.getGuild());
-                event.reply("Sucessfully reset all data for everyone.").queue();
+                event.replyEmbeds(new EmbedBuilder().setDescription("Sucessfully reset all data for everyone.").build()).queue();
                 return;
             }
-            event.reply("Sorry, but you need the Administrator Permission to reset all data.").queue();
+            event.replyEmbeds(new EmbedBuilder().setDescription("Sorry, but you need the Administrator Permission to reset all data.").build()).queue();
         }
     }
 
@@ -212,17 +219,17 @@ public class Main extends ListenerAdapter {
         return Updates.combine(newData, timestamp);
     }
 
-    public File genGraph(MongoCollection<Document> collection, Member[] user) throws IOException {
-        File img = new File("img.png");
+    public File genGraph(MongoCollection<Document> collection, List<Member> user) throws IOException {
+        File img = new File("graph.png");
         XYChart chart = new XYChart(600, 400);
         chart.setTitle("Score over Time");
         chart.setYAxisTitle("Score");
         chart.setXAxisTitle("Time");
         for (Member member : user) {
-            List<Number> data = collection.find(eq("id", member.getId())).first().getList("30d", Number.class);
-            chart.addSeries(member.getEffectiveName(), data);
+            if (member.getUser().isBot()) continue;
+            chart.addSeries(member.getEffectiveName(), collection.find(eq("id", member.getId())).first().getList("30d", Number.class));
         }
-        BitmapEncoder.saveBitmapWithDPI(chart, img.getPath(), BitmapEncoder.BitmapFormat.PNG, 300);
+        BitmapEncoder.saveBitmap(chart, img.getPath(), BitmapEncoder.BitmapFormat.PNG);
         return img;
     }
 
