@@ -10,13 +10,12 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 import javax.security.auth.login.LoginException;
-import java.io.IOException;
 
 public class StatcordBot {
     private final ShardManager shardManager;
     public StatcordBot(String[] args) throws LoginException {
         DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(args[0])
-                .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES)
+                .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
                 .setChunkingFilter(ChunkingFilter.ALL)
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .setEventPassthrough(true)

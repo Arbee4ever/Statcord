@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -39,6 +40,8 @@ public class GraphCommand {
                     .addEmbeds(new EmbedBuilder()
                             .setDescription(event.getUser().getAsMention())
                             .setImage("attachment://graph.png")
+                            .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
+                            .setColor(Color.decode("#6f58ac"))
                             .build())
                     .queue();
             img.delete();
