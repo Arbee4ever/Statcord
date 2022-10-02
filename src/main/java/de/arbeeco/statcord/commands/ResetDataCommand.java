@@ -22,14 +22,12 @@ public class ResetDataCommand {
                     MongoCollection<Document> collection = database.getCollection(member.getGuild().getId());
                     collection.insertOne(new UserDoc(member));
                     event.replyEmbeds(new EmbedBuilder().setDescription("Sucessfully reset all data for " + member.getAsMention() + ".")
-                                    .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
                                     .setColor(Color.decode("#6f58ac"))
                                     .build())
                             .queue();
                     return;
                 }
                 event.replyEmbeds(new EmbedBuilder().setDescription("User is a bot and has no Score.")
-                                .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
                                 .setColor(Color.decode("#6f58ac"))
                                 .build())
                         .queue();
@@ -38,7 +36,6 @@ public class ResetDataCommand {
                 deleteGuildData(event.getGuild());
                 initNewData(event.getGuild());
                 event.replyEmbeds(new EmbedBuilder().setDescription("Sucessfully reset all data for everyone.")
-                        .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
                         .setColor(Color.decode("#6f58ac"))
                         .build())
                         .queue();
@@ -46,7 +43,6 @@ public class ResetDataCommand {
             }
         }
         event.replyEmbeds(new EmbedBuilder().setDescription("Sorry, but you need the Administrator Permission to reset all data.")
-                .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
                 .setColor(Color.decode("#6f58ac"))
                 .build())
                 .queue();

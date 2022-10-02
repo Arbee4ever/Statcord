@@ -18,7 +18,6 @@ public class ScoreCommand {
         if (member.getUser().isBot()) {
             event.replyEmbeds(new EmbedBuilder()
                     .setDescription("User is a bot and has no score.")
-                    .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
                     .setColor(Color.decode("#6f58ac"))
                     .build())
                     .queue();
@@ -42,7 +41,6 @@ public class ScoreCommand {
         timeString = String.join("", hours, minutes, seconds);
         event.replyEmbeds(new EmbedBuilder()
                 .setDescription(member.getAsMention() + "'s current Score is: **" + (txtscore + vcscore) + "** (**" + txtscore + "** text, **" + timeString + "** VC).")
-                .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
                 .setColor(Color.decode("#6f58ac"))
                 .build())
                 .queue();
