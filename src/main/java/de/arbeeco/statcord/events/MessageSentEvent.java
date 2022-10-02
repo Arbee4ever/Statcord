@@ -30,7 +30,7 @@ public class MessageSentEvent extends ListenerAdapter {
                                     "> Staying in a voice channel rewards you \n" +
                                     "> Use commands like </score:1014385853348466738> or </graph:1014385853348466739>.")
                     .addField("Links:",
-                            "> Get Support: https://statcord.arbeeco.de/ \n" +
+                            "> Get Support: https://arbeeco.de/links/discord \n" +
                                     "> Website: https://statcord.arbeeco.de/",
                             false)
                     .addField("Commands:",
@@ -38,7 +38,6 @@ public class MessageSentEvent extends ListenerAdapter {
                                     "> </graph:1014385853348466739>: View your Score in the past. \n" +
                                     "> </leaderboard:1016808818128199792>: View the other Member's Scores.",
                             false)
-                    .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
                     .setColor(Color.decode("#6f58ac"))
                     .build()
             ).mentionRepliedUser(false).queue();

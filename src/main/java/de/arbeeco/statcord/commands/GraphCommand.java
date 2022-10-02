@@ -40,7 +40,6 @@ public class GraphCommand {
                     .addEmbeds(new EmbedBuilder()
                             .setDescription(event.getUser().getAsMention())
                             .setImage("attachment://graph.png")
-                            .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
                             .setColor(Color.decode("#6f58ac"))
                             .build())
                     .queue();

@@ -32,7 +32,6 @@ public class AddCommand {
                 return;
             }
             event.replyEmbeds(new EmbedBuilder().setDescription("User is a Bot and has no Score.")
-                    .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
                     .setColor(Color.decode("#6f58ac"))
                     .build())
                     .setEphemeral(true)
@@ -40,7 +39,6 @@ public class AddCommand {
             return;
         }
         event.replyEmbeds(new EmbedBuilder().setDescription("Sorry, but you need the Administrator Permission to add Score.")
-                .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
                 .setColor(Color.decode("#6f58ac"))
                 .build())
                 .setEphemeral(true)
