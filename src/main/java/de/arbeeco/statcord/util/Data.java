@@ -4,11 +4,11 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerApi;
 import com.mongodb.ServerApiVersion;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.*;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import com.mongodb.client.model.ValidationOptions;
 import com.mongodb.client.result.UpdateResult;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -239,6 +239,19 @@ public class Data {
     }
 
     public static UpdateResult update(Member member, Bson updates) {
+        if (!collectionExists(member.getGuild().getId())) {
+            initNewData(member.getGuild());
+        }
         return database.getCollection(member.getGuild().getId()).updateOne(eq("id", member.getId()), updates);
+    }
+
+    public static boolean collectionExists(final String collectionName) {
+        MongoIterable<String> collectionNames = database.listCollectionNames();
+        for (final String name : collectionNames) {
+            if (name.equalsIgnoreCase(collectionName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

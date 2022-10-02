@@ -6,6 +6,8 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
+import java.awt.*;
+
 public class AddCommand {
     public AddCommand(SlashCommandInteractionEvent event) {
         if (event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
@@ -29,9 +31,19 @@ public class AddCommand {
                         .build()).setEphemeral(true).queue();
                 return;
             }
-            event.replyEmbeds(new EmbedBuilder().setDescription("User is a Bot and has no Score.").build()).setEphemeral(true).queue();
+            event.replyEmbeds(new EmbedBuilder().setDescription("User is a Bot and has no Score.")
+                    .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
+                    .setColor(Color.decode("#6f58ac"))
+                    .build())
+                    .setEphemeral(true)
+                    .queue();
             return;
         }
-        event.replyEmbeds(new EmbedBuilder().setDescription("Sorry, but you need the Administrator Permission to add Score.").build()).setEphemeral(true).queue();
+        event.replyEmbeds(new EmbedBuilder().setDescription("Sorry, but you need the Administrator Permission to add Score.")
+                .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
+                .setColor(Color.decode("#6f58ac"))
+                .build())
+                .setEphemeral(true)
+                .queue();
     }
 }

@@ -5,6 +5,8 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
+import java.awt.*;
+
 public class ScoreCommand {
     public ScoreCommand(SlashCommandInteractionEvent event) {
         Member member = event.getMember();
@@ -14,7 +16,12 @@ public class ScoreCommand {
         int txtscore = Data.getTextScore(member);
         int vcscore = Data.getVoiceScore(member);
         if (member.getUser().isBot()) {
-            event.replyEmbeds(new EmbedBuilder().setDescription("User is a bot and has no score.").build()).queue();
+            event.replyEmbeds(new EmbedBuilder()
+                    .setDescription("User is a bot and has no score.")
+                    .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
+                    .setColor(Color.decode("#6f58ac"))
+                    .build())
+                    .queue();
             return;
         }
         int vcseconds = Data.getVoiceSeconds(member);
@@ -33,6 +40,11 @@ public class ScoreCommand {
         }
 
         timeString = String.join("", hours, minutes, seconds);
-        event.replyEmbeds(new EmbedBuilder().setDescription(member.getAsMention() + "'s current Score is: **" + (txtscore + vcscore) + "** (**" + txtscore + "** text, **" + timeString + "** VC).").build()).queue();
+        event.replyEmbeds(new EmbedBuilder()
+                .setDescription(member.getAsMention() + "'s current Score is: **" + (txtscore + vcscore) + "** (**" + txtscore + "** text, **" + timeString + "** VC).")
+                .setFooter(event.getJDA().getSelfUser().getName(), event.getJDA().getSelfUser().getAvatarUrl())
+                .setColor(Color.decode("#6f58ac"))
+                .build())
+                .queue();
     }
 }
