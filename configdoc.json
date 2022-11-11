@@ -1,0 +1,12 @@
+{
+  "name": "conversionvalues",
+  "id": "conversionvalues",
+  "msgsperpoint": {
+    "name": "msgsperpoint",
+    "value": 1
+  },
+  "vcsecondsperpoint": {
+    "name": "vcsecondsperpoint",
+    "value": 10
+  }
+}

@@ -1,9 +1,12 @@
 package de.arbeeco.statcord.commands;
 
+import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
-import net.dv8tion.jda.api.EmbedBuilder;
+import de.arbeeco.statcord.util.StatcordEmbed;
+import de.arbeeco.statcord.util.StatcordMessage;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.internal.JDAImpl;
 
 import java.awt.*;
 
@@ -16,7 +19,7 @@ public class ScoreCommand {
         int txtscore = Data.getTextScore(member);
         int vcscore = Data.getVoiceScore(member);
         if (member.getUser().isBot()) {
-            event.replyEmbeds(new EmbedBuilder()
+            event.replyEmbeds(new StatcordEmbed()
                     .setDescription("User is a bot and has no score.")
                     .setColor(Color.decode("#6f58ac"))
                     .build())
@@ -39,7 +42,10 @@ public class ScoreCommand {
         }
 
         timeString = String.join("", hours, minutes, seconds);
-        event.replyEmbeds(new EmbedBuilder()
+        /*String string = Config.getConfigValue(event.getGuild(), "messages", "scoremsg").getAsString();
+        JDAImpl jda = (JDAImpl)event.getJDA();
+        event.reply(StatcordMessage.fromJson(jda.getEntityBuilder(), string)).queue();*/
+        event.replyEmbeds(new StatcordEmbed()
                 .setDescription(member.getAsMention() + "'s current Score is: **" + (txtscore + vcscore) + "** (**" + txtscore + "** text, **" + timeString + "** VC).")
                 .setColor(Color.decode("#6f58ac"))
                 .build())

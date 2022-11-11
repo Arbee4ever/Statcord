@@ -3,10 +3,10 @@ package de.arbeeco.statcord.events;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.VoiceChannel;
-import net.dv8tion.jda.api.events.DisconnectEvent;
-import net.dv8tion.jda.api.events.ReadyEvent;
-import net.dv8tion.jda.api.events.ShutdownEvent;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
+import net.dv8tion.jda.api.events.session.SessionDisconnectEvent;
+import net.dv8tion.jda.api.events.session.ShutdownEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,7 +31,7 @@ public class ConnectionEvents extends ListenerAdapter {
     }
 
     @Override
-    public void onDisconnect(@NotNull DisconnectEvent event) {
+    public void onSessionDisconnect(SessionDisconnectEvent event) {
         awardPoints(event.getJDA());
     }
 

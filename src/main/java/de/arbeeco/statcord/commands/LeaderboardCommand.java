@@ -2,6 +2,7 @@ package de.arbeeco.statcord.commands;
 
 import com.mongodb.client.MongoCollection;
 import de.arbeeco.statcord.util.Data;
+import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -20,8 +21,8 @@ public class LeaderboardCommand {
     public LeaderboardCommand(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         MongoCollection<Document> collection = database.getCollection(guild.getId());
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("View full Leaderboard!", "https://statcord.arbeeco.de/" + event.getGuild().getId() + "/leaderboard");
+        EmbedBuilder embed = new StatcordEmbed()
+                .setTitle("View full Leaderboard!", "https://statcord.arbeeco.de/leaderboards/" + event.getGuild().getId());
         String description = "";
         int count = 0;
         for (Document memberData : collection.find().sort(descending("textscore", "voicescore")).limit(10)) {

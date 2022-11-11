@@ -1,6 +1,7 @@
 package de.arbeeco.statcord.commands;
 
 import de.arbeeco.statcord.util.Data;
+import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
@@ -25,20 +26,20 @@ public class AddCommand {
                 }
                 Data.addTextScore(member, addTextScore);
                 Data.addVoiceSeconds(member, addVoiceScore);
-                event.replyEmbeds(new EmbedBuilder().setDescription(member.getAsMention())
+                event.replyEmbeds(new StatcordEmbed().setDescription(member.getAsMention())
                         .addField("Textcore",  textScoreOld + " + " + addTextScore + " = " + Data.getTextScore(member), true)
                         .addField("Voicecore",  voiceScoreOld + " + " + addVoiceScore + " = " + Data.getVoiceScore(member), true)
                         .build()).setEphemeral(true).queue();
                 return;
             }
-            event.replyEmbeds(new EmbedBuilder().setDescription("User is a Bot and has no Score.")
+            event.replyEmbeds(new StatcordEmbed().setDescription("User is a Bot and has no Score.")
                     .setColor(Color.decode("#6f58ac"))
                     .build())
                     .setEphemeral(true)
                     .queue();
             return;
         }
-        event.replyEmbeds(new EmbedBuilder().setDescription("Sorry, but you need the Administrator Permission to add Score.")
+        event.replyEmbeds(new StatcordEmbed().setDescription("Sorry, but you need the Administrator Permission to add Score.")
                 .setColor(Color.decode("#6f58ac"))
                 .build())
                 .setEphemeral(true)
