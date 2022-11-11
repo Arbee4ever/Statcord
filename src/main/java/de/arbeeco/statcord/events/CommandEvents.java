@@ -1,17 +1,24 @@
-package de.arbeeco.statcord.commands;
+package de.arbeeco.statcord.events;
 
-import net.dv8tion.jda.api.events.ReadyEvent;
+import de.arbeeco.statcord.commands.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
 
-public class CommandManager extends ListenerAdapter {
+import static de.arbeeco.statcord.util.Data.collectionExists;
+import static de.arbeeco.statcord.util.Data.initNewData;
+
+public class CommandEvents extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+        if (!collectionExists(event.getGuild().getId())) {
+            initNewData(event.getGuild());
+        }
         switch (event.getName()) {
             case "score" -> {
                 new ScoreCommand(event);
@@ -27,6 +34,9 @@ public class CommandManager extends ListenerAdapter {
             }
             case "add" -> {
                 new AddCommand(event);
+            }
+            case "ping" -> {
+                new PingCommand(event);
             }
         }
     }
@@ -52,7 +62,8 @@ public class CommandManager extends ListenerAdapter {
                         .addOptions(
                                 new OptionData(OptionType.USER, "user", "User to add score to", true),
                                 new OptionData(OptionType.INTEGER, "textscore", "Textscore to add"),
-                                new OptionData(OptionType.INTEGER, "voiceseconds", "Amount of Seconds to add"))
+                                new OptionData(OptionType.INTEGER, "voiceseconds", "Amount of Seconds to add")),
+                Commands.slash("ping", "Retrieve the Bots ping")
         ).queue();
     }
 }

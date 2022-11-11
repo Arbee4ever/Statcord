@@ -1,20 +1,31 @@
 package de.arbeeco.statcord;
 
 import de.arbeeco.statcord.api.StatcordApi;
-import de.arbeeco.statcord.commands.CommandManager;
 import de.arbeeco.statcord.events.*;
+import de.arbeeco.statcord.util.Data;
+import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.login.LoginException;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.time.Instant;
+import java.util.Date;
+import java.util.List;
 
 public class StatcordBot {
-    private final ShardManager shardManager;
+    public static ShardManager shardManager;
     public static StatcordApi statcordApi;
+    public static Logger logger = LoggerFactory.getLogger(StatcordBot.class);
     public StatcordBot(String[] args) throws LoginException {
         DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(args[0])
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
@@ -31,12 +42,45 @@ public class StatcordBot {
                 new GuildMemberEvents(),
                 new GuildVoiceEvents(),
                 new MessageSentEvent(),
-                new CommandManager()
+                new CommandEvents()
         );
     }
 
     public static void main(String[] args) throws LoginException {
         StatcordBot statcordBot = new StatcordBot(args);
         statcordApi = new StatcordApi(statcordBot.shardManager.retrieveApplicationInfo().getJDA());
+        logger.info("Start: " + Date.from(Instant.now()));
+
+        new Thread(() -> {
+
+            String line = "";
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            try {
+                while((line = reader.readLine()) != null) {
+                    if(line.equalsIgnoreCase("updateconfigs")) {
+                        for (int i = 0; i < shardManager.getShardsTotal(); i++) {
+                            List<Guild> guilds = shardManager.getShardById(i).getGuilds();
+                            for (Guild guild: guilds) {
+                                logger.info(i + ": " + guild.getId());
+                            }
+                        }
+                        logger.info("WIP");
+                    } else if(line.equalsIgnoreCase("exit")) {
+                        if(shardManager != null) {
+                            shardManager.setStatus(OnlineStatus.OFFLINE);
+                            shardManager.shutdown();
+                            Data.mongoClient.close();
+                            logger.info("Bot shutdown at: " + Date.from(Instant.now()));
+                            System.exit(0);
+                        }
+                        reader.close();
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }).start();
     }
 }

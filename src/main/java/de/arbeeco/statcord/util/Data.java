@@ -5,10 +5,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerApi;
 import com.mongodb.ServerApiVersion;
 import com.mongodb.client.*;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
-import com.mongodb.client.model.ValidationOptions;
 import com.mongodb.client.result.UpdateResult;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -16,6 +13,8 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYSeries;
+import org.knowm.xchart.style.Styler;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.model.Filters.eq;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 public class Data {
     static ConnectionString connectionString = new ConnectionString(System.getenv("CONNECTION_STRING"));
@@ -35,12 +35,12 @@ public class Data {
                     .version(ServerApiVersion.V1)
                     .build())
             .build();
-    static MongoClient mongoClient = MongoClients.create(settings);
+    public static MongoClient mongoClient = MongoClients.create(settings);
     public static MongoDatabase database = mongoClient.getDatabase("Guilds");
 
     public static File genGraph(List<Member> user, int days, String filter) throws IOException {
         File img = new File("graph.png");
-        XYChart chart = new XYChart(600, 400);
+        XYChart chart = new XYChart(1000, 600);
         chart.setTitle("Score over Time");
         chart.setYAxisTitle("Score");
         chart.setXAxisTitle("Time (in days)");
@@ -65,35 +65,41 @@ public class Data {
             syncHistoryDays(member);
             List<Number> textList = getTextHistory(member, false);
             List<Number> voiceList = getVoiceHistory(member, false);
-            List<Number> list = new ArrayList<>(List.of());
+            List<Number> yList = new ArrayList<>(List.of());
+            List<Number> xList = new ArrayList<>(List.of());
+            for (int i = 0; i < days; i++) {
+                xList.add(-i);
+            }
             switch (filter) {
-                case "text" -> list = new ArrayList<>(textList);
-                case "voice" -> list = new ArrayList<>(voiceList);
+                case "text" -> {
+                    for (int i = 0; i < textList.size(); i++) {
+                        yList.add(0, textList.get(i).intValue());
+                    }
+                }
+                case "voice" -> {
+                    for (int i = 0; i < voiceList.size(); i++) {
+                        yList.add(0, voiceList.get(i).intValue());
+                    }
+                }
                 default -> {
                     for (int i = 0; i < textList.size(); i++) {
-                        list.add(i, voiceList.get(i).intValue()/10 + textList.get(i).intValue());
+                        yList.add(0, textList.get(i).intValue() + voiceList.get(i).intValue());
                     }
                 }
             }
-            List<Number> subList = list.subList(max(0, list.size()-days), list.size());
-            chart.addSeries(member.getEffectiveName(), subList);
+            List<Number> ySubList = yList.subList(0, min(yList.size(), yList.size()-(yList.size()-days)));
+            List<Number> xSubList = xList.subList(0, ySubList.size());
+            chart.addSeries(member.getEffectiveName(), xSubList, ySubList);
         }
         BitmapEncoder.saveBitmap(chart, img.getPath(), BitmapEncoder.BitmapFormat.PNG);
         return img;
     }
 
-    public static boolean initNewData(Guild guild) {
+    public static void initNewData(Guild guild) {
         database.createCollection(guild.getId());
-        MongoCollection<Document> collection = database.getCollection(guild.getId());
-        for (Member user : guild.getMembers()) {
-            if (!user.getUser().isBot()) {
-                collection.insertOne(new UserDoc(user));
-            }
-        }
-        return true;
     }
 
-    public static MongoCollection<Document> getGuildData(Guild guild) {
+    public static MongoCollection<Document> getGuildData(Guild guild) throws IllegalArgumentException{
         return database.getCollection(guild.getId());
     }
 
@@ -140,7 +146,7 @@ public class Data {
 
     public static int getTextScore(Member member) {
         MongoCollection<Document> collection = database.getCollection(member.getGuild().getId());
-        return collection.find(eq("id", member.getId())).first().getInteger("textscore");
+        return collection.find(eq("id", member.getId())).first().getInteger("textscore") / Config.getConfigValue(member.getGuild(), "conversionvalues", "msgsperpoint").getAsInt();
     }
 
     public static void addVoiceSeconds(Member member, int x) {
@@ -149,7 +155,7 @@ public class Data {
 
     public static int getVoiceScore(Member member) {
         MongoCollection<Document> collection = database.getCollection(member.getGuild().getId());
-        return collection.find(eq("id", member.getId())).first().getInteger("voicescore") / 10;
+        return collection.find(eq("id", member.getId())).first().getInteger("voicescore") / Config.getConfigValue(member.getGuild(), "conversionvalues", "vcsecondsperpoint").getAsInt();
     }
 
     public static int getVoiceSeconds(Member member) {
@@ -216,7 +222,7 @@ public class Data {
         if (newDay) {
             data.add(x);
         } else {
-            data.set(data.size(), (int)data.get(data.size() - 1) + x);
+            data.set(data.size() - 1, (int)data.get(data.size() - 1) + x);
         }
         Bson newData = Updates.set("voicehistory", data);
         return update(member, Updates.combine(newData));

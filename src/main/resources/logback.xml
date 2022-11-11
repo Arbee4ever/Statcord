@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} | %boldCyan(%-34.-34thread) | %red(%7.10X{jda.shard}) | %boldGreen(%-15.-15logger{0}) | %highlight(%-6level) | %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <timestamp key="bySecond" datePattern="yyyy-MM-dd_HH:mm:ss"/>
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/log-${bySecond}.log</file>
+        <append>true</append>
+        <immediateFlush>true</immediateFlush>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} | %(%-34.-34thread) | %(%7.10X{jda.shard}) | %(%-20.-20logger{0}) | %(%-6level) | %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>

@@ -1,5 +1,6 @@
 package de.arbeeco.statcord.commands;
 
+import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -37,8 +38,8 @@ public class GraphCommand {
             }
             File img = genGraph(graphUser, days, filter);
             event.replyFiles(FileUpload.fromData(img))
-                    .addEmbeds(new EmbedBuilder()
-                            .setDescription(event.getUser().getAsMention())
+                    .addEmbeds(new StatcordEmbed()
+                            .setDescription(event.getMember().getAsMention())
                             .setImage("attachment://graph.png")
                             .setColor(Color.decode("#6f58ac"))
                             .build())
