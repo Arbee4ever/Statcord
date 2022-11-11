@@ -3,7 +3,6 @@ package de.arbeeco.statcord.commands;
 import com.mongodb.client.MongoCollection;
 import de.arbeeco.statcord.util.StatcordEmbed;
 import de.arbeeco.statcord.util.UserDoc;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -35,7 +34,7 @@ public class ResetDataCommand {
                 return;
             } else {
                 deleteGuildData(event.getGuild());
-                initNewData(event.getGuild());
+                initNewGuildData(event.getGuild());
                 event.replyEmbeds(new StatcordEmbed().setDescription("Sucessfully reset all data for everyone.")
                         .setColor(Color.decode("#6f58ac"))
                         .build())

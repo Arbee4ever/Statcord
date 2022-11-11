@@ -8,14 +8,14 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 
 import static de.arbeeco.statcord.util.Data.deleteGuildData;
-import static de.arbeeco.statcord.util.Data.initNewData;
+import static de.arbeeco.statcord.util.Data.initNewGuildData;
 
 public class GuildEvents extends ListenerAdapter {
     @Override
     public void onGuildJoin(@NotNull GuildJoinEvent event) {
         Guild guild = event.getGuild();
         JDA jda = event.getJDA();
-        initNewData(event.getGuild());
+        initNewGuildData(event.getGuild());
         jda.retrieveUserById(391979592883372042L).queue(user ->
                 user.openPrivateChannel()
                         .flatMap(privateChannel -> privateChannel.sendMessage("Joined Server: " + guild.getName() + " Membercount:" + (guild.getMemberCount() - 1)))

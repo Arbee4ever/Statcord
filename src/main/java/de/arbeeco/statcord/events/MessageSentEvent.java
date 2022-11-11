@@ -36,7 +36,8 @@ public class MessageSentEvent extends ListenerAdapter {
                                     "> Use commands like </score:1014385853348466738> or </graph:1014385853348466739>.")
                     .addField("Links:",
                             "> Get Support: https://arbeeco.de/links/discord \n" +
-                                    "> Website: https://statcord.arbeeco.de/",
+                                    "> Website: https://statcord.arbeeco.de/ \n" +
+                                    "> Vote: https://top.gg/bot/959915020152627271",
                             false)
                     .addField("Commands:",
                             "> </score:1014385853348466738>: View your current Score. \n" +
