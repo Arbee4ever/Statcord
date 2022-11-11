@@ -9,16 +9,10 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
 
-import static de.arbeeco.statcord.util.Data.collectionExists;
-import static de.arbeeco.statcord.util.Data.initNewData;
-
 public class CommandEvents extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-        if (!collectionExists(event.getGuild().getId())) {
-            initNewData(event.getGuild());
-        }
         switch (event.getName()) {
             case "score" -> {
                 new ScoreCommand(event);
