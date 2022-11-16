@@ -1,8 +1,13 @@
 package de.arbeeco.statcord;
 
-import de.arbeeco.statcord.api.StatcordApi;
+import de.arbeeco.statcord.api.Api;
+import de.arbeeco.statcord.api.ConfigApi;
+import de.arbeeco.statcord.api.DataApi;
 import de.arbeeco.statcord.events.*;
+import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
+import io.javalin.Javalin;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
@@ -24,15 +29,13 @@ import java.util.List;
 
 public class StatcordBot {
     public static ShardManager shardManager;
-    public static StatcordApi statcordApi;
     public static Logger logger = LoggerFactory.getLogger(StatcordBot.class);
-    public StatcordBot(String[] args) throws LoginException {
+    public StatcordBot(String[] args) {
         DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(args[0])
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
                 .setChunkingFilter(ChunkingFilter.ALL)
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
-                .setEventPassthrough(true)
-                .setActivity(Activity.watching("ARBEE's code."));
+                .setEventPassthrough(true);
 
         shardManager = builder.build();
 
@@ -44,15 +47,18 @@ public class StatcordBot {
                 new MessageSentEvent(),
                 new CommandEvents()
         );
+
+        shardManager.setActivity(Activity.watching(shardManager.getGuilds().size() + 1 + " Servers."));
     }
 
-    public static void main(String[] args) throws LoginException {
+    public static void main(String[] args) {
         StatcordBot statcordBot = new StatcordBot(args);
-        statcordApi = new StatcordApi(statcordBot.shardManager.retrieveApplicationInfo().getJDA());
+        JDA jda = statcordBot.shardManager.retrieveApplicationInfo().getJDA();
+        new Api(jda);
         logger.info("Start: " + Date.from(Instant.now()));
 
+        //region Commands
         new Thread(() -> {
-
             String line = "";
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             try {
@@ -80,7 +86,7 @@ public class StatcordBot {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }).start();
+        //endregion
     }
 }
