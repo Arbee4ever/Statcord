@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
 import io.javalin.Javalin;
@@ -17,49 +18,21 @@ import net.dv8tion.jda.api.utils.FileUpload;
 import org.bson.Document;
 
 import java.io.*;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static com.mongodb.client.model.Sorts.descending;
 
-public class StatcordApi {
+public class DataApi {
     private final JDA jda;
-    public StatcordApi(JDA jda) {
+    public DataApi(JDA jda, Javalin app) {
         this.jda = jda;
-        var app = Javalin.create()
-                .get("/", ctx -> ctx.result("Hello World"))
+        app
                 .get("/guilds", this::getGuilds)
                 .get("/guilds/{guildId}", this::getGuildById)
-                .get("/guilds/{guildId}/config", this::getGuildConfig)
-                .post("/guilds/{guildId}/config", this::setGuildConfig)
-                .get("/guilds/{guildId}/config/{category}", this::getGuildConfigCategory)
-                .get("/user/{userId}", this::getUser)
-                .start(8080);
-
-        app.exception(Exception.class, (exception, ctx) -> {
-            JsonObject errorResp = new JsonObject();
-            errorResp.addProperty("error", "An Error occurred and the Dev is already informed.");
-            jda.retrieveUserById(391979592883372042L).queue(user ->
-                    user.openPrivateChannel()
-                            .flatMap(privateChannel -> {
-                                File file = new File("test.log");
-                                PrintStream ps = null;
-                                try {
-                                    ps = new PrintStream(file);
-                                } catch (FileNotFoundException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                exception.printStackTrace(ps);
-                                return privateChannel.sendMessage("Path: " + ctx.fullUrl() + "\nError: ```" + exception.getMessage() + "```").addFiles(FileUpload.fromData(file));
-                            })
-                            .queue());
-            ctx.result(String.valueOf(errorResp));
-        });
-
-        app.before(ctx -> {
-            ctx.contentType("application/json");
-            ctx.header("Access-Control-Allow-Origin", "*");
-        });
+                .get("/user/{userId}", this::getUser);
     }
     private void getGuilds(Context ctx) {
         JsonObject respArr = new JsonObject();
@@ -158,33 +131,6 @@ public class StatcordApi {
             respObject.add("members", jsonArray);
             ctx.result(String.valueOf(respObject));
         }
-    }
-    private void getGuildConfig(Context ctx) {
-        Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
-        FindIterable<Document> collection = Config.getGuildConfig(guild).find();
-        JsonArray respArr = new JsonArray();
-        for (Document document: collection) {
-            JsonObject jsonObject = new Gson().fromJson(document.toJson(), JsonObject.class);
-            jsonObject.remove("_id");
-            respArr.add(jsonObject);
-        }
-        ctx.result(String.valueOf(respArr));
-    }
-    private void setGuildConfig(Context ctx) {
-        ctx.status(501);
-        ctx.result(String.valueOf(new JsonObject()));
-    }
-    private void getGuildConfigCategory(Context ctx) {
-        Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
-        if (guild == null) {
-            JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("404", "Guild not found");
-            ctx.status(404);
-            ctx.result(String.valueOf(jsonObject));
-            return;
-        }
-        JsonObject data = Config.getConfigCategory(guild, ctx.pathParam("category")).getAsJsonObject();
-        ctx.result(String.valueOf(data));
     }
     private void getUser(Context ctx) {
         User user = jda.getUserById(ctx.pathParam("userId"));
