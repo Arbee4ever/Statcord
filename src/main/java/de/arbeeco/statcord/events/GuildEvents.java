@@ -1,6 +1,8 @@
 package de.arbeeco.statcord.events;
 
+import de.arbeeco.statcord.StatcordBot;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
@@ -13,6 +15,7 @@ import static de.arbeeco.statcord.util.Data.initNewGuildData;
 public class GuildEvents extends ListenerAdapter {
     @Override
     public void onGuildJoin(@NotNull GuildJoinEvent event) {
+        StatcordBot.shardManager.setActivity(Activity.watching(event.getJDA().getGuilds().size() + " Servers."));
         Guild guild = event.getGuild();
         JDA jda = event.getJDA();
         initNewGuildData(event.getGuild());
@@ -24,6 +27,7 @@ public class GuildEvents extends ListenerAdapter {
 
     @Override
     public void onGuildLeave(@NotNull GuildLeaveEvent event) {
+        StatcordBot.shardManager.setActivity(Activity.watching(event.getJDA().getGuilds().size() + " Servers."));
         Guild guild = event.getGuild();
         JDA jda = event.getJDA();
         deleteGuildData(guild);

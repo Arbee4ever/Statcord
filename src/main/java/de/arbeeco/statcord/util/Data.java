@@ -1,5 +1,8 @@
 package de.arbeeco.statcord.util;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerApi;
@@ -17,6 +20,8 @@ import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.XYChart;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -24,11 +29,21 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.model.Filters.eq;
+import static de.arbeeco.statcord.StatcordBot.logger;
 import static java.lang.Math.min;
 
 public class Data {
     //region Variables
-    static ConnectionString connectionString = new ConnectionString(System.getenv("CONNECTION_STRING"));
+    static JsonObject config;
+    static {
+        try {
+            config = JsonParser.parseReader(new FileReader("config.json")).getAsJsonObject();
+        } catch (FileNotFoundException e) {
+            logger.info("config.json missing.");
+        }
+    }
+
+    static ConnectionString connectionString = new ConnectionString(config.get("connection_string").getAsString());
     static MongoClientSettings settings = MongoClientSettings.builder()
             .applyConnectionString(connectionString)
             .serverApi(ServerApi.builder()

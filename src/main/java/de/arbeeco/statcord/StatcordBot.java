@@ -1,12 +1,8 @@
 package de.arbeeco.statcord;
 
 import de.arbeeco.statcord.api.Api;
-import de.arbeeco.statcord.api.ConfigApi;
-import de.arbeeco.statcord.api.DataApi;
 import de.arbeeco.statcord.events.*;
-import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
-import io.javalin.Javalin;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
@@ -19,8 +15,8 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.security.auth.login.LoginException;
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Instant;
@@ -47,8 +43,6 @@ public class StatcordBot {
                 new MessageSentEvent(),
                 new CommandEvents()
         );
-
-        shardManager.setActivity(Activity.watching(shardManager.getGuilds().size() + 1 + " Servers."));
     }
 
     public static void main(String[] args) {

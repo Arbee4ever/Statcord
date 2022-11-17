@@ -21,7 +21,7 @@ import java.io.FileReader;
 import static com.mongodb.client.model.Filters.eq;
 
 public class Config {
-    static ConnectionString connectionString = new ConnectionString(System.getenv("CONNECTION_STRING"));
+    static ConnectionString connectionString = new ConnectionString(Data.config.get("connection_string").getAsString());
     static MongoClientSettings settings = MongoClientSettings.builder()
             .applyConnectionString(connectionString)
             .serverApi(ServerApi.builder()
@@ -45,10 +45,10 @@ public class Config {
     }
 
     public static MongoCollection<Document> getGuildConfig(Guild guild) {
-        if (database.getCollection(guild.getId()).countDocuments() == 0) {
+        MongoCollection<Document> collection = database.getCollection(guild.getId());
+        if (collection.countDocuments() == 0) {
             newGuildConfig(guild);
         }
-        MongoCollection<Document> collection = database.getCollection(guild.getId());
         return collection;
     }
 
@@ -75,9 +75,10 @@ public class Config {
     }
 
     public static UpdateResult update(Guild guild, Bson updates) {
-        if (Data.getGuildData(guild).find(eq("id", "config")).first() == null) {
+        MongoCollection<Document> collection = database.getCollection(guild.getId());
+        if (collection.countDocuments() == 0) {
             newGuildConfig(guild);
         }
-        return database.getCollection(guild.getId()).updateOne(eq("id", "config"), updates);
+        return collection.updateOne(eq("id", "config"), updates);
     }
 }
