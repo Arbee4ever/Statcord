@@ -1,11 +1,8 @@
 package de.arbeeco.statcord.api;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
-import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
 import io.javalin.Javalin;
@@ -14,13 +11,9 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.utils.FileUpload;
 import org.bson.Document;
 
-import java.io.*;
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import static com.mongodb.client.model.Sorts.descending;
@@ -98,7 +91,6 @@ public class DataApi {
                     ctx.result(String.valueOf(jsonObject));
                     return;
                 }
-                System.out.print(ctx.queryParams("user").size());
                 JsonObject jsonObject = new JsonObject();
                 jsonObject.addProperty("moderator", guild.getMemberById(user.getId()).hasPermission(Permission.MANAGE_SERVER));
                 ctx.result(String.valueOf(jsonObject));
