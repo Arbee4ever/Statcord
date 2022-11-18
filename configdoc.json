@@ -1,12 +1,24 @@
-{
-  "name": "conversionvalues",
-  "id": "conversionvalues",
-  "msgsperpoint": {
-    "name": "msgsperpoint",
-    "value": 1
+[
+  {
+    "name": "conversionvalues",
+    "id": "conversionvalues",
+    "msgsperpoint": {
+      "name": "msgsperpoint",
+      "value": 1
+    },
+    "vcsecondsperpoint": {
+      "name": "vcsecondsperpoint",
+      "value": 10
+    }
   },
-  "vcsecondsperpoint": {
-    "name": "vcsecondsperpoint",
-    "value": 10
-  }
+  {
+    "name": "Messages",
+    "id": "messages",
+    "scoremsg": {
+      "name": "Score Command Response",
+      "value": "{\n  \"content\": \"test\",\n  \"embeds\": [\n    {\n      \"type\": \"url\",\n      \"description\": \"${userping}'s current Score is: **${scoretotal}** (**${textscore}** text, **${voicetime}** VC).\",\n      \"color\": \"#6F58AC\",\n      \"timestamp\": \"2022-10-11T22:12:10.000Z\",\n      \"fields\": [{\n        \"name\": \"test\",\n        \"value\": \"test\",\n        \"inline\": true\n      }]\n    }\n  ]\n}",
+      "type": "message",
+      "id": "scoremsg"
+    }
 }
+]

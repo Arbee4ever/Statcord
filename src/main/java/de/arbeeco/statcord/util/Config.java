@@ -11,12 +11,15 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
+import de.arbeeco.statcord.StatcordBot;
 import net.dv8tion.jda.api.entities.Guild;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import javax.print.Doc;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.UUID;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -32,16 +35,23 @@ public class Config {
     public static MongoDatabase database = mongoClient.getDatabase("Configs");
     public static void newGuildConfig(Guild guild) {
         MongoCollection<Document> collection = database.getCollection(guild.getId());
-        JsonObject jsonObject = new JsonObject();
         try {
-            Object obj = JsonParser.parseReader(new FileReader("configdoc.json"));
-
-            jsonObject = (JsonObject) obj;
+            JsonArray obj = (JsonArray) JsonParser.parseReader(new FileReader("configdoc.json"));
+            for (JsonElement config: obj) {
+                Document document = Document.parse(config.toString());
+                collection.insertOne(document);
+            }
+            JsonObject auth = new JsonObject();
+            auth.addProperty("name", "Auth");
+            auth.addProperty("id", "auth");
+            JsonObject token = new JsonObject();
+            token.addProperty("name", "Token");
+            token.addProperty("value", UUID.randomUUID().toString());
+            auth.add("token", token);
+            collection.insertOne(Document.parse(auth.toString()));
         } catch (FileNotFoundException e) {
-            System.out.print(e);
+            StatcordBot.logger.error(e.toString());
         }
-        Document document = Document.parse(jsonObject.toString());
-        collection.insertOne(document);
     }
 
     public static MongoCollection<Document> getGuildConfig(Guild guild) {
