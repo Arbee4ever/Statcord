@@ -112,7 +112,8 @@ public class DataApi {
             MongoCollection<Document> collection = Data.getGuildData(guild);
             JsonArray jsonArray = new JsonArray();
             int count = 0;
-            for (Document memberData : collection.find().sort(descending("textscore", "voicescore"))) {
+            int index = ctx.queryParams("page").size() != 0 ? Integer.parseInt(ctx.queryParams("page").get(0)) : 0;
+            for (Document memberData : collection.find().sort(descending("textscore", "voicescore")).skip(index*100).limit(100)) {
                 count++;
                 JsonObject jsonObject = new JsonObject();
                 jsonObject.addProperty("pos", count);
