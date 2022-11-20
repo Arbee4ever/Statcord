@@ -23,9 +23,15 @@ public class Api {
 
     public Api(JDA jda) {
         this.jda = jda;
-        Javalin app = Javalin.create()
+        Javalin app = Javalin.create(config -> {
+                    config.plugins.enableCors(cors -> {
+                        cors.add(it -> {
+                            it.anyHost();
+                        });
+                    });
+                })
                 .get("/", ctx -> ctx.result("Hello World"))
-                .start(8080);
+                .start();
 
         app.exception(Exception.class, (exception, ctx) -> {
             JsonObject errorResp = new JsonObject();
@@ -50,6 +56,7 @@ public class Api {
         app.before(ctx -> {
             ctx.contentType("application/json");
             ctx.header("Access-Control-Allow-Origin", "*");
+            ctx.header("Access-Control-Allow-Headers", "*");
         });
 
         dataApi = new DataApi(jda, app);
@@ -60,7 +67,8 @@ public class Api {
 
     public static boolean isAuthorized(Context ctx) {
         Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
-        if (Objects.equals(ctx.header("Authorization"), jda.getToken()) || Objects.equals(ctx.header("Authorization"), Config.getConfigValue(guild, "auth", "token").getAsString())) return true;
+        if (Objects.equals(ctx.header("Authorization"), jda.getToken()) || Objects.equals(ctx.header("Authorization"), Config.getConfigValue(guild, "auth", "token").getAsString()))
+            return true;
         ctx.status(401);
         JsonObject error = new JsonObject();
         error.addProperty("message", "401: Unauthorized");

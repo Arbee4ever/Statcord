@@ -20,6 +20,7 @@ import static com.mongodb.client.model.Sorts.descending;
 
 public class DataApi {
     private final JDA jda;
+
     public DataApi(JDA jda, Javalin app) {
         this.jda = jda;
         app
@@ -27,6 +28,7 @@ public class DataApi {
                 .get("/guilds/{guildId}", this::getGuildById)
                 .get("/user/{userId}", this::getUser);
     }
+
     private void getGuilds(Context ctx) {
         JsonObject respArr = new JsonObject();
 
@@ -67,6 +69,7 @@ public class DataApi {
         respArr.add("other_guilds", allGuildsArr);
         ctx.result(String.valueOf(respArr));
     }
+
     private void getGuildById(Context ctx) {
         Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
         JsonObject respObject = new JsonObject();
@@ -113,18 +116,20 @@ public class DataApi {
             JsonArray jsonArray = new JsonArray();
             int count = 0;
             int index = ctx.queryParams("page").size() != 0 ? Integer.parseInt(ctx.queryParams("page").get(0)) : 0;
-            for (Document memberData : collection.find().sort(descending("textscore", "voicescore")).skip(index*100).limit(100)) {
+            int limit = 50;
+            for (Document memberData : collection.find().sort(descending("textscore", "voicescore")).skip(index * limit).limit(limit)) {
                 count++;
                 JsonObject jsonObject = new JsonObject();
-                jsonObject.addProperty("pos", count);
+                jsonObject.addProperty("pos", count + (index * limit));
                 jsonObject.addProperty("id", memberData.getString("id"));
-                jsonObject.addProperty("score", (memberData.getInteger("textscore")/ Config.getConfigValue(guild, "conversionvalues", "msgsperpoint").getAsInt()) + (memberData.getInteger("voicescore")/Config.getConfigValue(guild, "conversionvalues", "vcsecondsperpoint").getAsInt()));
+                jsonObject.addProperty("score", (memberData.getInteger("textscore") / Config.getConfigValue(guild, "conversionvalues", "msgsperpoint").getAsInt()) + (memberData.getInteger("voicescore") / Config.getConfigValue(guild, "conversionvalues", "vcsecondsperpoint").getAsInt()));
                 jsonArray.add(jsonObject);
             }
             respObject.add("members", jsonArray);
             ctx.result(String.valueOf(respObject));
         }
     }
+
     private void getUser(Context ctx) {
         User user = jda.getUserById(ctx.pathParam("userId"));
         JsonObject jsonObject = new JsonObject();
