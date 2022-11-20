@@ -42,12 +42,8 @@ public class Config {
                 collection.insertOne(document);
             }
             JsonObject auth = new JsonObject();
-            auth.addProperty("name", "Auth");
             auth.addProperty("id", "auth");
-            JsonObject token = new JsonObject();
-            token.addProperty("name", "Token");
-            token.addProperty("value", UUID.randomUUID().toString());
-            auth.add("token", token);
+            auth.addProperty("token", UUID.randomUUID().toString());
             collection.insertOne(Document.parse(auth.toString()));
         } catch (FileNotFoundException e) {
             StatcordBot.logger.error(e.toString());
@@ -71,24 +67,25 @@ public class Config {
         }
         data = new Gson().fromJson(document.toJson(), JsonObject.class);
         data.remove("_id");
-        data.remove("name");
         data.remove("id");
         return data;
     }
 
     public static JsonElement getConfigValue(Guild guild, String categoryName, String valueName) {
-        return getConfigCategory(guild, categoryName).get(valueName).getAsJsonObject().get("value");
+        return getConfigCategory(guild, categoryName).get(valueName);
     }
 
-    public static void setValue(Guild guild, String valueName, String input) {
-        update(guild, Updates.set(valueName, input));
+    public static void setConfigValue(Guild guild, String categoryName, String valueName, Object input) {
+        if (getConfigValue(guild, categoryName, valueName) != null) {
+            update(guild, categoryName, Updates.set(valueName, input));
+        }
     }
 
-    public static UpdateResult update(Guild guild, Bson updates) {
+    public static UpdateResult update(Guild guild, String categoryName, Bson updates) {
         MongoCollection<Document> collection = database.getCollection(guild.getId());
         if (collection.countDocuments() == 0) {
             newGuildConfig(guild);
         }
-        return collection.updateOne(eq("id", "config"), updates);
+        return collection.updateOne(eq("id", categoryName), updates);
     }
 }

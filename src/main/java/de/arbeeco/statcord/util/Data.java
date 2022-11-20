@@ -25,6 +25,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -35,6 +36,7 @@ import static java.lang.Math.min;
 public class Data {
     //region Variables
     static JsonObject config;
+
     static {
         try {
             config = JsonParser.parseReader(new FileReader("config.json")).getAsJsonObject();
@@ -59,7 +61,7 @@ public class Data {
         database.createCollection(guild.getId());
     }
 
-    public static MongoCollection<Document> getGuildData(Guild guild) throws IllegalArgumentException{
+    public static MongoCollection<Document> getGuildData(Guild guild) throws IllegalArgumentException {
         return database.getCollection(guild.getId());
     }
 
@@ -141,19 +143,20 @@ public class Data {
                     }
                 }
             }
-            List<Number> ySubList = yList.subList(0, min(yList.size(), yList.size()-(yList.size()-days)));
+            List<Number> ySubList = yList.subList(0, min(yList.size(), yList.size() - (yList.size() - days)));
             List<Number> xSubList = xList.subList(0, ySubList.size());
             chart.addSeries(member.getEffectiveName(), xSubList, ySubList);
         }
         BitmapEncoder.saveBitmap(chart, img.getPath(), BitmapEncoder.BitmapFormat.PNG);
         return img;
     }
+
     public static void syncHistoryDays(Member member) {
         List<Number> textList = getTextHistory(member, false);
         List<Number> voiceList = getVoiceHistory(member, false);
         if (textList.size() != voiceList.size()) {
             if (textList.size() > voiceList.size()) {
-                for (int j = 0; j < (textList.size() - voiceList.size()) ; j++) {
+                for (int j = 0; j < (textList.size() - voiceList.size()); j++) {
                     appendVoiceHistory(member, true, 0);
                 }
             } else {
@@ -167,21 +170,29 @@ public class Data {
 
     //region Text-Interactors
     public static void addTextScore(Member member, int x) {
-        updateLastMsg(member);
-        setMemberValue(member, "textscore", x);
-        appendTextHistory(member, false, x);
+        Date lastm = Data.getLastMsg(member);
+        Date now = Date.from(Instant.now());
+        if ((lastm.getTime() - now.getTime()) < -Config.getConfigValue(member.getGuild(), "conversionvalues", "cooldown").getAsInt()) {
+            updateLastMsg(member);
+            setMemberValue(member, "textscore", (int) getMemberValue(member, "textscore") + x);
+            appendTextHistory(member, false, x);
+        }
     }
+
     public static int getTextScore(Member member) {
-        return (int)getMemberValue(member, "textscore") / Config.getConfigValue(member.getGuild(), "conversionvalues", "msgsperpoint").getAsInt();
+        return (int) getMemberValue(member, "textscore") / Config.getConfigValue(member.getGuild(), "conversionvalues", "msgsperpoint").getAsInt();
     }
+
     public static Date getLastMsg(Member member) {
-        return (Date)getMemberValue(member, "lastmsg");
+        return (Date) getMemberValue(member, "lastmsg");
     }
+
     public static void updateLastMsg(Member member) {
         setMemberValue(member, "lastmsg", new Timestamp(System.currentTimeMillis()));
     }
+
     public static List<Number> getTextHistory(Member member, boolean unprocessed) {
-        List<Number> beforeList = (List<Number>)getMemberValue(member, "texthistory");
+        List<Number> beforeList = (List<Number>) getMemberValue(member, "texthistory");
         if (unprocessed) {
             return beforeList;
         }
@@ -195,12 +206,13 @@ public class Data {
         }
         return list;
     }
+
     public static UpdateResult appendTextHistory(Member member, boolean newDay, int x) {
         List<Number> data = new ArrayList<>(getTextHistory(member, true));
         if (newDay) {
             data.add(x);
         } else {
-            data.set(data.size() - 1, (int)data.get(data.size() - 1) + x);
+            data.set(data.size() - 1, (int) data.get(data.size() - 1) + x);
         }
         return setMemberValue(member, "texthistory", data);
     }
@@ -210,6 +222,7 @@ public class Data {
     public static void setVcStart(Guild guild, Member member) {
         setMemberValue(member, "voicestart", new Timestamp(System.currentTimeMillis()));
     }
+
     public static void awardVcPoints(Guild guild, Member member) {
         MongoCollection<Document> collection = database.getCollection(guild.getId());
         Date lastjoin = collection.find(eq("id", member.getId())).first().getDate("voicestart");
@@ -227,17 +240,21 @@ public class Data {
         appendVoiceHistory(member, false, (int) diff);
         addVoiceSeconds(member, (int) diff);
     }
+
     public static void addVoiceSeconds(Member member, int x) {
         setMemberValue(member, "voicescore", x);
     }
+
     public static int getVoiceScore(Member member) {
-        return (int)getMemberValue(member, "voicescore") / Config.getConfigValue(member.getGuild(), "conversionvalues", "vcsecondsperpoint").getAsInt();
+        return (int) getMemberValue(member, "voicescore") / Config.getConfigValue(member.getGuild(), "conversionvalues", "vcsecondsperpoint").getAsInt();
     }
+
     public static int getVoiceSeconds(Member member) {
-        return (int)getMemberValue(member, "voicescore");
+        return (int) getMemberValue(member, "voicescore");
     }
+
     public static List<Number> getVoiceHistory(Member member, boolean unprocessed) {
-        List<Number> beforeList = (List<Number>)getMemberValue(member, "voicehistory");
+        List<Number> beforeList = (List<Number>) getMemberValue(member, "voicehistory");
         if (unprocessed) {
             return beforeList;
         }
@@ -251,12 +268,13 @@ public class Data {
         }
         return list;
     }
+
     public static UpdateResult appendVoiceHistory(Member member, boolean newDay, int x) {
         List<Number> data = getVoiceHistory(member, true);
         if (newDay) {
             data.add(x);
         } else {
-            data.set(data.size() - 1, (int)data.get(data.size() - 1) + x);
+            data.set(data.size() - 1, (int) data.get(data.size() - 1) + x);
         }
         return setMemberValue(member, "voicehistory", data);
     }
