@@ -122,8 +122,8 @@ public class DataApi {
             JsonArray jsonArray = new JsonArray();
             int count = 0;
             int index = 0;
-            if (!Objects.equals(ctx.queryParams("page").get(0), "")) {
-                index = ctx.queryParams("page").isEmpty() ? Integer.parseInt(ctx.queryParams("page").get(0)) : 0;
+            if (!ctx.queryParams("page").isEmpty()) {
+                 index = Objects.equals(ctx.queryParams("page").get(0), "") ? 0 : Integer.parseInt(ctx.queryParams("page").get(0));
             }
             int limit = 50;
             for (Document memberData : collection.find().sort(descending("textscore", "voicescore", "id")).skip(index * limit).limit(limit)) {

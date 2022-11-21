@@ -24,20 +24,9 @@ public class ConfigApi {
     public ConfigApi(JDA jda, Javalin app) {
         this.jda = jda;
         app
-                .before("/guilds/{guildId}/*", this::before)
                 .get("/guilds/{guildId}/config", this::getGuildConfig)
                 .patch("/guilds/{guildId}/{category}", this::setGuildConfig)
                 .get("/guilds/{guildId}/{category}", this::getGuildConfigCategory);
-    }
-
-    private void before(Context ctx) {
-        if (ctx.pathParam("guildId").isBlank() || !ctx.pathParam("guildId").matches("[0-9]+")) throw new BadRequestResponse("Please enter a valid Guild-ID");
-        if (ctx.pathParamAsClass("guildId", String.class).hasValue()) {
-            Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
-            if (guild == null) {
-                throw new NotFoundResponse("Guild not found");
-            }
-        }
     }
 
     private void getGuildConfig(Context ctx) {
