@@ -1,5 +1,14 @@
 package de.arbeeco.statcord;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.ServerApi;
+import com.mongodb.ServerApiVersion;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
 import de.arbeeco.statcord.api.Api;
 import de.arbeeco.statcord.events.*;
 import de.arbeeco.statcord.util.Data;
@@ -14,9 +23,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -24,6 +31,15 @@ import java.util.List;
 public class StatcordBot {
     public static ShardManager shardManager;
     public static Logger logger = LoggerFactory.getLogger(StatcordBot.class);
+    //region Config
+    static JsonObject config;
+    static FileReader fileReader;
+    static ConnectionString connectionString;
+    static MongoClientSettings settings;
+    public static MongoClient mongoClient;
+    public static MongoDatabase guildsDB;
+    public static MongoDatabase configsDB;
+    //endregion
     public StatcordBot(String[] args) {
         DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(args[0])
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
@@ -44,6 +60,7 @@ public class StatcordBot {
     }
 
     public static void main(String[] args) {
+        loadConfig();
         StatcordBot statcordBot = new StatcordBot(args);
         JDA jda = statcordBot.shardManager.retrieveApplicationInfo().getJDA();
         new Api(jda);
@@ -54,20 +71,23 @@ public class StatcordBot {
             String line = "";
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             try {
-                while((line = reader.readLine()) != null) {
-                    if(line.equalsIgnoreCase("updateconfigs")) {
+                while ((line = reader.readLine()) != null) {
+                    if (line.equalsIgnoreCase("updateconfigs")) {
                         for (int i = 0; i < shardManager.getShardsTotal(); i++) {
                             List<Guild> guilds = shardManager.getShardById(i).getGuilds();
-                            for (Guild guild: guilds) {
+                            for (Guild guild : guilds) {
                                 logger.info(i + ": " + guild.getId());
                             }
                         }
                         logger.info("WIP");
-                    } else if(line.equalsIgnoreCase("exit")) {
-                        if(shardManager != null) {
+                    } else if (line.equalsIgnoreCase("updatebotconfig")) {
+                        mongoClient.close();
+                        loadConfig();
+                    } else if (line.equalsIgnoreCase("exit")) {
+                        if (shardManager != null) {
                             shardManager.setStatus(OnlineStatus.OFFLINE);
                             shardManager.shutdown();
-                            Data.mongoClient.close();
+                            mongoClient.close();
                             logger.info("Bot shutdown at: " + Date.from(Instant.now()));
                             System.exit(0);
                         }
@@ -80,5 +100,24 @@ public class StatcordBot {
             }
         }).start();
         //endregion
+    }
+
+    public static void loadConfig() {
+        try {
+            fileReader = new FileReader("config.json");
+            config = JsonParser.parseReader(fileReader).getAsJsonObject();
+        } catch (FileNotFoundException e) {
+            logger.info("config.json missing.");
+        }
+        connectionString = new ConnectionString(config.get("connection_string").getAsString());
+        settings = MongoClientSettings.builder()
+                .applyConnectionString(connectionString)
+                .serverApi(ServerApi.builder()
+                        .version(ServerApiVersion.V1)
+                        .build())
+                .build();
+        mongoClient = MongoClients.create(settings);
+        guildsDB = mongoClient.getDatabase("Guilds");
+        configsDB = mongoClient.getDatabase("Configs");
     }
 }

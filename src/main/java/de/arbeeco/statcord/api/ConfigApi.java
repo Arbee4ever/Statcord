@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import org.bson.Document;
 
+import java.lang.reflect.MalformedParametersException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,6 +31,7 @@ public class ConfigApi {
     }
 
     private void before(Context ctx) {
+        if (ctx.pathParam("guildId").isBlank() || !ctx.pathParam("guildId").matches("[0-9]+")) throw new BadRequestResponse("Please enter a valid Guild-ID");
         if (ctx.pathParamAsClass("guildId", String.class).hasValue()) {
             Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
             if (guild == null) {

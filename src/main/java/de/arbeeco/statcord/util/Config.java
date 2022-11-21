@@ -1,14 +1,7 @@
 package de.arbeeco.statcord.util;
 
 import com.google.gson.*;
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
-import com.mongodb.ServerApi;
-import com.mongodb.ServerApiVersion;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
 import de.arbeeco.statcord.StatcordBot;
@@ -25,18 +18,8 @@ import java.util.UUID;
 import static com.mongodb.client.model.Filters.eq;
 
 public class Config {
-    static ConnectionString connectionString = new ConnectionString(Data.config.get("connection_string").getAsString());
-    static MongoClientSettings settings = MongoClientSettings.builder()
-            .applyConnectionString(connectionString)
-            .serverApi(ServerApi.builder()
-                    .version(ServerApiVersion.V1)
-                    .build())
-            .build();
-    static MongoClient mongoClient = MongoClients.create(settings);
-    public static MongoDatabase database = mongoClient.getDatabase("Configs");
-
     public static void newGuildConfig(Guild guild) {
-        MongoCollection<Document> collection = database.getCollection(guild.getId());
+        MongoCollection<Document> collection = StatcordBot.configsDB.getCollection(guild.getId());
         try {
             JsonArray obj = (JsonArray) JsonParser.parseReader(new FileReader("configdoc.json"));
             for (JsonElement config : obj) {
@@ -53,7 +36,7 @@ public class Config {
     }
 
     public static MongoCollection<Document> getGuildConfig(Guild guild) {
-        MongoCollection<Document> collection = database.getCollection(guild.getId());
+        MongoCollection<Document> collection = StatcordBot.configsDB.getCollection(guild.getId());
         if (collection.countDocuments() == 0) {
             newGuildConfig(guild);
         }
@@ -86,7 +69,7 @@ public class Config {
     }
 
     public static UpdateResult update(Guild guild, String categoryName, Bson updates) {
-        MongoCollection<Document> collection = database.getCollection(guild.getId());
+        MongoCollection<Document> collection = StatcordBot.configsDB.getCollection(guild.getId());
         if (collection.countDocuments() == 0) {
             newGuildConfig(guild);
         }
