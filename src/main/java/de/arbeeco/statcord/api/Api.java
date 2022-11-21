@@ -4,7 +4,9 @@ import com.google.gson.JsonObject;
 import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Config;
 import io.javalin.Javalin;
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
+import io.javalin.http.NotFoundResponse;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -31,6 +33,8 @@ public class Api {
                     });
                 })
                 .get("/", ctx -> ctx.result("Hello World"))
+                .before("/guilds/{guildId}/*", this::beforeGuildId)
+                .before("/guilds/{guildId}", this::beforeGuildId)
                 .start();
 
         app.exception(Exception.class, (exception, ctx) -> {
@@ -74,5 +78,15 @@ public class Api {
         error.addProperty("message", "401: Unauthorized");
         ctx.result(error.toString());
         return false;
+    }
+
+    private void beforeGuildId(Context ctx) {
+        if (ctx.pathParam("guildId").isBlank() || !ctx.pathParam("guildId").matches("[0-9]+")) throw new BadRequestResponse("Please provide a valid Guild-ID");
+        if (ctx.pathParamAsClass("guildId", String.class).hasValue()) {
+            Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
+            if (guild == null) {
+                throw new NotFoundResponse("Guild not found");
+            }
+        }
     }
 }
