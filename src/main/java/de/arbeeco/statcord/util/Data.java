@@ -31,44 +31,22 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.model.Filters.eq;
+import static de.arbeeco.statcord.StatcordBot.guildsDB;
 import static de.arbeeco.statcord.StatcordBot.logger;
 import static java.lang.Math.min;
 
 public class Data {
-    //region Variables
-    static JsonObject config;
-
-    static {
-        try {
-            FileReader fileReader = new FileReader("config.json");
-            config = JsonParser.parseReader(fileReader).getAsJsonObject();
-        } catch (FileNotFoundException e) {
-            logger.info("config.json missing.");
-        }
-    }
-
-    static ConnectionString connectionString = new ConnectionString(config.get("connection_string").getAsString());
-    static MongoClientSettings settings = MongoClientSettings.builder()
-            .applyConnectionString(connectionString)
-            .serverApi(ServerApi.builder()
-                    .version(ServerApiVersion.V1)
-                    .build())
-            .build();
-    public static MongoClient mongoClient = MongoClients.create(settings);
-    public static MongoDatabase database = mongoClient.getDatabase("Guilds");
-    //endregion
-
     //region GuildConfig
     public static void initNewGuildData(Guild guild) {
-        database.createCollection(guild.getId());
+        guildsDB.createCollection(guild.getId());
     }
 
     public static MongoCollection<Document> getGuildData(Guild guild) throws IllegalArgumentException {
-        return database.getCollection(guild.getId());
+        return guildsDB.getCollection(guild.getId());
     }
 
     public static boolean deleteGuildData(Guild guild) {
-        MongoCollection<Document> collection = database.getCollection(guild.getId());
+        MongoCollection<Document> collection = guildsDB.getCollection(guild.getId());
         MongoCollection<Document> configCollection = Config.getGuildConfig(guild);
         collection.drop();
         configCollection.drop();
@@ -78,12 +56,12 @@ public class Data {
 
     //region MemberConfig
     public static Object getMemberValue(Member member, String valueName) {
-        MongoCollection<Document> collection = database.getCollection(member.getGuild().getId());
+        MongoCollection<Document> collection = guildsDB.getCollection(member.getGuild().getId());
         return collection.find(eq("id", member.getId())).first().get(valueName);
     }
 
     public static UpdateResult setMemberValue(Member member, String valueName, Object newValue) {
-        MongoCollection<Document> collection = database.getCollection(member.getGuild().getId());
+        MongoCollection<Document> collection = guildsDB.getCollection(member.getGuild().getId());
         if (newValue == null) {
             return collection.updateOne(eq("id", member.getId()), Updates.unset(valueName));
         }
@@ -91,17 +69,13 @@ public class Data {
     }
 
     public static boolean deleteMemberData(Guild guild, Member member) {
-        MongoCollection<Document> collection = database.getCollection(guild.getId());
+        MongoCollection<Document> collection = guildsDB.getCollection(guild.getId());
         collection.deleteOne(eq("id", member.getId()));
         return true;
     }
     //endregion
 
     //region Misc
-    public static void restartDBConnection() {
-
-    }
-
     public static File genGraph(List<Member> user, int days, String filter) throws IOException {
         File img = new File("graph.png");
         XYChart chart = new XYChart(1000, 600);
@@ -182,13 +156,17 @@ public class Data {
         Date now = Date.from(Instant.now());
         if ((lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown")) {
             updateLastMsg(member);
-            setMemberValue(member, "textscore", (int) getMemberValue(member, "textscore") + x);
+            setMemberValue(member, "textscore", getTextMessages(member) + x);
             appendTextHistory(member, false, x);
         }
     }
 
     public static int getTextScore(Member member) {
         return (int) getMemberValue(member, "textscore") / (int) Config.getConfigValue(member.getGuild(), "values", "msgsperpoint");
+    }
+
+    public static int getTextMessages(Member member) {
+        return (int) getMemberValue(member, "textscore");
     }
 
     public static Date getLastMsg(Member member) {
@@ -232,7 +210,7 @@ public class Data {
     }
 
     public static void awardVcPoints(Guild guild, Member member) {
-        MongoCollection<Document> collection = database.getCollection(guild.getId());
+        MongoCollection<Document> collection = Data.getGuildData(guild);
         StatcordBot.logger.info("Member: ");
         Date lastjoin = collection.find(eq("id", member.getId())).first().getDate("voicestart");
         setMemberValue(member, "voicestart", null);
@@ -251,7 +229,7 @@ public class Data {
     }
 
     public static void addVoiceSeconds(Member member, int x) {
-        setMemberValue(member, "voicescore", x);
+        setMemberValue(member, "voicescore", getVoiceSeconds(member) + x);
     }
 
     public static int getVoiceScore(Member member) {
