@@ -1,5 +1,6 @@
 package de.arbeeco.statcord.api;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mongodb.client.MongoCollection;
@@ -13,8 +14,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static com.mongodb.client.model.Sorts.descending;
 
@@ -34,8 +34,11 @@ public class DataApi {
 
         List<Guild> allGuilds = new ArrayList<>(jda.getGuilds());
         List<String> userId = ctx.queryParams("user");
-        if (userId.size() != 0) {
-            User user = jda.getUserById(userId.get(0));
+        if (userId.size() != 0 ) {
+            User user = null;
+            if (!Objects.equals(userId.get(0), "")) {
+                user = jda.getUserById(userId.get(0));
+            }
             if (user == null) {
                 JsonObject jsonObject = new JsonObject();
                 jsonObject.addProperty("404", "User not found");
@@ -80,7 +83,10 @@ public class DataApi {
             ctx.result(String.valueOf(jsonObject));
         } else {
             if (ctx.queryParams("user").size() != 0) {
-                User user = jda.getUserById(ctx.queryParams("user").get(0));
+                User user = null;
+                if (!Objects.equals(ctx.queryParams("user").get(0), "")) {
+                    user = jda.getUserById(ctx.queryParams("user").get(0));
+                }
                 if (user == null) {
                     JsonObject jsonObject = new JsonObject();
                     jsonObject.addProperty("404", "User not found");
@@ -117,12 +123,11 @@ public class DataApi {
             int count = 0;
             int index = ctx.queryParams("page").size() != 0 ? Integer.parseInt(ctx.queryParams("page").get(0)) : 0;
             int limit = 50;
-            for (Document memberData : collection.find().sort(descending("textscore", "voicescore")).skip(index * limit).limit(limit)) {
+            for (Document memberData : collection.find().sort(descending("textscore", "voicescore", "id")).skip(index * limit).limit(limit)) {
                 count++;
-                JsonObject jsonObject = new JsonObject();
+                JsonObject jsonObject = new Gson().fromJson(memberData.toJson(), JsonObject.class);
+                jsonObject.remove("_id");
                 jsonObject.addProperty("pos", count + (index * limit));
-                jsonObject.addProperty("id", memberData.getString("id"));
-                jsonObject.addProperty("score", (memberData.getInteger("textscore") / Config.getConfigValue(guild, "conversionvalues", "msgsperpoint").getAsInt()) + (memberData.getInteger("voicescore") / Config.getConfigValue(guild, "conversionvalues", "vcsecondsperpoint").getAsInt()));
                 jsonArray.add(jsonObject);
             }
             respObject.add("members", jsonArray);

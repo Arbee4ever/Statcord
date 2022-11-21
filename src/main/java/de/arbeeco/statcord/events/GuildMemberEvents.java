@@ -1,6 +1,7 @@
 package de.arbeeco.statcord.events;
 
 import com.mongodb.client.MongoCollection;
+import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.UserDoc;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -11,13 +12,12 @@ import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 
 import static com.mongodb.client.model.Filters.eq;
-import static de.arbeeco.statcord.util.Data.database;
 
 public class GuildMemberEvents extends ListenerAdapter {
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
         Member member = event.getMember();
-        MongoCollection<Document> collection = database.getCollection(member.getGuild().getId());
+        MongoCollection<Document> collection = Data.getGuildData(member.getGuild());
         if (!member.getUser().isBot()) {
             collection.insertOne(new UserDoc(member));
         }
@@ -26,7 +26,7 @@ public class GuildMemberEvents extends ListenerAdapter {
     @Override
     public void onGuildMemberRemove(@NotNull GuildMemberRemoveEvent event) {
         Guild guild = event.getGuild();
-        MongoCollection<Document> collection = database.getCollection(guild.getId());
+        MongoCollection<Document> collection = Data.getGuildData(guild);
         Member user = event.getMember();
         if (!user.getUser().isBot()) {
             collection.deleteOne(eq("id", user.getId()));
