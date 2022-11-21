@@ -1,6 +1,7 @@
 package de.arbeeco.statcord.events;
 
 import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.util.Data;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
@@ -14,9 +15,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-import static de.arbeeco.statcord.util.Data.awardVcPoints;
-import static de.arbeeco.statcord.util.Data.setVcStart;
-
 public class ConnectionEvents extends ListenerAdapter {
     @Override
     public void onReady(@NotNull ReadyEvent event) {
@@ -28,7 +26,7 @@ public class ConnectionEvents extends ListenerAdapter {
                 List<Member> members = voiceChannel.getMembers();
                 for (Member member : members) {
                     if (member.getUser().isBot()) return;
-                    setVcStart(guild, member);
+                    Data.setVcStart(guild, member);
                 }
             }
         }
@@ -51,7 +49,8 @@ public class ConnectionEvents extends ListenerAdapter {
             for (VoiceChannel voiceChannel : voiceChannels) {
                 List<Member> members = voiceChannel.getMembers();
                 for (Member member : members) {
-                    awardVcPoints(guild, member);
+                    if (member.getUser().isBot()) return;
+                    Data.awardVcPoints(guild, member);
                 }
             }
         }

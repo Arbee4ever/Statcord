@@ -12,13 +12,14 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
 import de.arbeeco.statcord.StatcordBot;
+import io.javalin.http.NotFoundResponse;
 import net.dv8tion.jda.api.entities.Guild;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
-import javax.print.Doc;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -33,11 +34,12 @@ public class Config {
             .build();
     static MongoClient mongoClient = MongoClients.create(settings);
     public static MongoDatabase database = mongoClient.getDatabase("Configs");
+
     public static void newGuildConfig(Guild guild) {
         MongoCollection<Document> collection = database.getCollection(guild.getId());
         try {
             JsonArray obj = (JsonArray) JsonParser.parseReader(new FileReader("configdoc.json"));
-            for (JsonElement config: obj) {
+            for (JsonElement config : obj) {
                 Document document = Document.parse(config.toString());
                 collection.insertOne(document);
             }
@@ -58,27 +60,29 @@ public class Config {
         return collection;
     }
 
-    public static JsonObject getConfigCategory(Guild guild, String categoryName) {
+    public static Map getConfigCategory(Guild guild, String categoryName) {
         Document document = getGuildConfig(guild).find(eq("id", categoryName)).first();
-        JsonObject data = new JsonObject();
         if (document == null) {
-            data.addProperty("404", "Category not found");
-            return data;
+            throw new NotFoundResponse("Category not found");
         }
-        data = new Gson().fromJson(document.toJson(), JsonObject.class);
-        data.remove("_id");
-        data.remove("id");
-        return data;
+        Map<String, Object> map = new Gson().fromJson(document.toJson(), Map.class);
+        return map;
     }
 
-    public static JsonElement getConfigValue(Guild guild, String categoryName, String valueName) {
-        return getConfigCategory(guild, categoryName).get(valueName);
+    public static Object getConfigValue(Guild guild, String configCategory, String valueName) {
+        Object value = getConfigCategory(guild, configCategory).get(valueName);
+        if (value == null) return null;
+        if (value.getClass() == Double.class) {
+            value = ((Double) value).intValue();
+        }
+        return value;
     }
 
     public static void setConfigValue(Guild guild, String categoryName, String valueName, Object input) {
-        if (getConfigValue(guild, categoryName, valueName) != null) {
-            update(guild, categoryName, Updates.set(valueName, input));
-        }
+        Object old = getConfigValue(guild, categoryName, valueName);
+        if (old == null) return;
+        if (input.getClass() != old.getClass()) return;
+        update(guild, categoryName, Updates.set(valueName, input));
     }
 
     public static UpdateResult update(Guild guild, String categoryName, Bson updates) {

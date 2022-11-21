@@ -13,6 +13,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
+import de.arbeeco.statcord.StatcordBot;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import org.bson.Document;
@@ -39,7 +40,8 @@ public class Data {
 
     static {
         try {
-            config = JsonParser.parseReader(new FileReader("config.json")).getAsJsonObject();
+            FileReader fileReader = new FileReader("config.json");
+            config = JsonParser.parseReader(fileReader).getAsJsonObject();
         } catch (FileNotFoundException e) {
             logger.info("config.json missing.");
         }
@@ -67,7 +69,9 @@ public class Data {
 
     public static boolean deleteGuildData(Guild guild) {
         MongoCollection<Document> collection = database.getCollection(guild.getId());
+        MongoCollection<Document> configCollection = Config.getGuildConfig(guild);
         collection.drop();
+        configCollection.drop();
         return true;
     }
     //endregion
@@ -94,6 +98,10 @@ public class Data {
     //endregion
 
     //region Misc
+    public static void restartDBConnection() {
+
+    }
+
     public static File genGraph(List<Member> user, int days, String filter) throws IOException {
         File img = new File("graph.png");
         XYChart chart = new XYChart(1000, 600);
@@ -172,7 +180,7 @@ public class Data {
     public static void addTextScore(Member member, int x) {
         Date lastm = Data.getLastMsg(member);
         Date now = Date.from(Instant.now());
-        if ((lastm.getTime() - now.getTime()) < -Config.getConfigValue(member.getGuild(), "conversionvalues", "cooldown").getAsInt()) {
+        if ((lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown")) {
             updateLastMsg(member);
             setMemberValue(member, "textscore", (int) getMemberValue(member, "textscore") + x);
             appendTextHistory(member, false, x);
@@ -180,7 +188,7 @@ public class Data {
     }
 
     public static int getTextScore(Member member) {
-        return (int) getMemberValue(member, "textscore") / Config.getConfigValue(member.getGuild(), "conversionvalues", "msgsperpoint").getAsInt();
+        return (int) getMemberValue(member, "textscore") / (int) Config.getConfigValue(member.getGuild(), "values", "msgsperpoint");
     }
 
     public static Date getLastMsg(Member member) {
@@ -225,6 +233,7 @@ public class Data {
 
     public static void awardVcPoints(Guild guild, Member member) {
         MongoCollection<Document> collection = database.getCollection(guild.getId());
+        StatcordBot.logger.info("Member: ");
         Date lastjoin = collection.find(eq("id", member.getId())).first().getDate("voicestart");
         setMemberValue(member, "voicestart", null);
         Date now = new Time(System.currentTimeMillis());
@@ -246,7 +255,7 @@ public class Data {
     }
 
     public static int getVoiceScore(Member member) {
-        return (int) getMemberValue(member, "voicescore") / Config.getConfigValue(member.getGuild(), "conversionvalues", "vcsecondsperpoint").getAsInt();
+        return (int) getMemberValue(member, "voicescore") / (int) Config.getConfigValue(member.getGuild(), "values", "vcsecondsperpoint");
     }
 
     public static int getVoiceSeconds(Member member) {

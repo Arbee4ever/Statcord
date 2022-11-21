@@ -67,7 +67,7 @@ public class Api {
 
     public static boolean isAuthorized(Context ctx) {
         Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
-        if (Objects.equals(ctx.header("Authorization"), jda.getToken()) || Objects.equals(ctx.header("Authorization"), Config.getConfigValue(guild, "auth", "token").getAsString()))
+        if (Objects.equals(ctx.header("Authorization"), jda.getToken()) || Objects.equals(ctx.header("Authorization"), Config.getConfigValue(guild, "auth", "token")))
             return true;
         ctx.status(401);
         JsonObject error = new JsonObject();

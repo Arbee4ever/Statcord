@@ -1,12 +1,12 @@
 [
   {
-    "id": "conversionvalues",
+    "id": "values",
     "msgsperpoint": 1,
     "vcsecondsperpoint": 10,
-    "cooldown": 60000
+    "cooldown": 45000
   },
   {
-    "id": "messages",
-    "scoremsg": "{\n  'content': 'test',\n  'embeds': [\n    {\n      'type': 'url',\n      'description': '${userping}'s current Score is: **${scoretotal}** (**${textscore}** text, **${voicetime}** VC).',\n      'color': '#6F58AC',\n      'timestamp': '2022-10-11T22:12:10.000Z',\n      'fields': [{\n        'name': 'test',\n        'value': 'test',\n        'inline': true\n      }]\n    }\n  ]\n}"
+    "id": "data",
+    "deleteonleave": true
   }
 ]

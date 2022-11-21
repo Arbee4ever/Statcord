@@ -9,18 +9,12 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.bson.Document;
 
-import java.time.Instant;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-
 import static com.mongodb.client.model.Indexes.descending;
-import static de.arbeeco.statcord.util.Data.database;
 
 public class LeaderboardCommand {
     public LeaderboardCommand(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
-        MongoCollection<Document> collection = database.getCollection(guild.getId());
+        MongoCollection<Document> collection =Data.getGuildData(guild);
         EmbedBuilder embed = new StatcordEmbed()
                 .setTitle("View full Leaderboard!", "https://statcord.arbeeco.de/leaderboards/" + event.getGuild().getId());
         String description = "";

@@ -53,7 +53,6 @@ public class ConfigApi {
         Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
         String categoryName = ctx.pathParam("category");
         Map<String, Object> body = ctx.bodyAsClass(Map.class);
-        System.out.print(body);
         body.forEach((name, value) -> {
             Config.setConfigValue(guild, categoryName, name, value);
         });
@@ -64,7 +63,7 @@ public class ConfigApi {
     private void getGuildConfigCategory(Context ctx) {
         if (!isAuthorized(ctx)) return;
         Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
-        JsonObject data = Config.getConfigCategory(guild, ctx.pathParam("category")).getAsJsonObject();
+        Map data = Config.getConfigCategory(guild, ctx.pathParam("category"));
         ctx.result(String.valueOf(data));
         ctx.status(200);
     }
@@ -74,8 +73,6 @@ public class ConfigApi {
         FindIterable<Document> collection = Config.getGuildConfig(guild).find();
         JsonObject respObj = new JsonObject();
         for (Document document : collection) {
-            //TODO: remove once better Permission System implemented
-            if (Objects.equals(document.get("id").toString(), "auth")) continue;
             document.remove("_id");
             String id = document.remove("id").toString();
             respObj.add(id, new Gson().fromJson(document.toJson(), JsonObject.class));
