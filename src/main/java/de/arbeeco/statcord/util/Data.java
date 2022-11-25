@@ -211,7 +211,6 @@ public class Data {
 
     public static void awardVcPoints(Guild guild, Member member) {
         MongoCollection<Document> collection = Data.getGuildData(guild);
-        StatcordBot.logger.info("Member: ");
         Date lastjoin = collection.find(eq("id", member.getId())).first().getDate("voicestart");
         setMemberValue(member, "voicestart", null);
         Date now = new Time(System.currentTimeMillis());

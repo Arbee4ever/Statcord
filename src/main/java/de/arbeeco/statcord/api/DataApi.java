@@ -7,6 +7,7 @@ import com.mongodb.client.MongoCollection;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
 import io.javalin.Javalin;
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
@@ -14,22 +15,22 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import static com.mongodb.client.model.Sorts.descending;
+import static io.javalin.apibuilder.ApiBuilder.path;
+import static io.javalin.apibuilder.ApiBuilder.get;
 
 public class DataApi {
     private final JDA jda;
 
-    public DataApi(JDA jda, Javalin app) {
+    public DataApi(JDA jda) {
         this.jda = jda;
-        app
-                .get("/guilds", this::getGuilds)
-                .get("/guilds/{guildId}", this::getGuildById)
-                .get("/user/{userId}", this::getUser);
     }
 
-    private void getGuilds(Context ctx) {
+    public void getGuilds(Context ctx) {
         JsonObject respArr = new JsonObject();
 
         List<Guild> allGuilds = new ArrayList<>(jda.getGuilds());
@@ -39,26 +40,20 @@ public class DataApi {
             if (!Objects.equals(userId.get(0), "")) {
                 user = jda.getUserById(userId.get(0));
             }
-            if (user == null) {
-                JsonObject jsonObject = new JsonObject();
-                jsonObject.addProperty("404", "User not found");
-                ctx.status(404);
-                ctx.result(String.valueOf(jsonObject));
-                return;
+            if (user != null) {
+                List<Guild> mutGuilds = new ArrayList<>(jda.getMutualGuilds(user));
+                JsonArray mutGuildsArr = new JsonArray();
+                for (Guild guild : mutGuilds) {
+                    JsonObject jsonObject = new JsonObject();
+                    jsonObject.addProperty("id", guild.getId());
+                    jsonObject.addProperty("name", guild.getName());
+                    jsonObject.addProperty("icon", guild.getIconId());
+                    jsonObject.addProperty("moderator", guild.getMemberById(user.getId()).hasPermission(Permission.MANAGE_SERVER));
+                    mutGuildsArr.add(jsonObject);
+                }
+                respArr.add("mutual_guilds", mutGuildsArr);
+                allGuilds.removeAll(mutGuilds);
             }
-
-            List<Guild> mutGuilds = new ArrayList<>(jda.getMutualGuilds(user));
-            JsonArray mutGuildsArr = new JsonArray();
-            for (Guild guild : mutGuilds) {
-                JsonObject jsonObject = new JsonObject();
-                jsonObject.addProperty("id", guild.getId());
-                jsonObject.addProperty("name", guild.getName());
-                jsonObject.addProperty("icon", guild.getIconId());
-                jsonObject.addProperty("moderator", guild.getMemberById(user.getId()).hasPermission(Permission.MANAGE_SERVER));
-                mutGuildsArr.add(jsonObject);
-            }
-            respArr.add("mutual_guilds", mutGuildsArr);
-            allGuilds.removeAll(mutGuilds);
         }
 
         JsonArray allGuildsArr = new JsonArray();
@@ -70,17 +65,17 @@ public class DataApi {
             allGuildsArr.add(jsonObject);
         }
         respArr.add("other_guilds", allGuildsArr);
-        ctx.result(String.valueOf(respArr));
+        ctx.json(String.valueOf(respArr));
     }
 
-    private void getGuildById(Context ctx) {
+    public void getGuildById(Context ctx) {
         Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
         JsonObject respObject = new JsonObject();
         if (guild == null) {
             JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty("404", "Guild not found");
             ctx.status(404);
-            ctx.result(String.valueOf(jsonObject));
+            ctx.json(String.valueOf(jsonObject));
         } else {
             if (ctx.queryParams("user").size() != 0) {
                 User user = null;
@@ -91,18 +86,18 @@ public class DataApi {
                     JsonObject jsonObject = new JsonObject();
                     jsonObject.addProperty("404", "User not found");
                     ctx.status(404);
-                    ctx.result(String.valueOf(jsonObject));
+                    ctx.json(String.valueOf(jsonObject));
                     return;
                 } else if (guild.getMemberById(user.getId()) == null) {
                     JsonObject jsonObject = new JsonObject();
                     jsonObject.addProperty("404", "Member not found");
                     ctx.status(404);
-                    ctx.result(String.valueOf(jsonObject));
+                    ctx.json(String.valueOf(jsonObject));
                     return;
                 }
                 JsonObject jsonObject = new JsonObject();
                 jsonObject.addProperty("moderator", guild.getMemberById(user.getId()).hasPermission(Permission.MANAGE_SERVER));
-                ctx.result(String.valueOf(jsonObject));
+                ctx.json(String.valueOf(jsonObject));
                 return;
             }
             JsonObject guildData = new JsonObject();
@@ -120,26 +115,27 @@ public class DataApi {
             respObject.add("guild", guildData);
             MongoCollection<Document> collection = Data.getGuildData(guild);
             JsonArray jsonArray = new JsonArray();
+            int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(0);
+            int limit = 100;
             int count = 0;
-            int index = 0;
-            if (!ctx.queryParams("page").isEmpty()) {
-                 index = Objects.equals(ctx.queryParams("page").get(0), "") ? 0 : Integer.parseInt(ctx.queryParams("page").get(0));
-            }
-            int limit = 50;
-            for (Document memberData : collection.find().sort(descending("textscore", "voicescore", "id")).skip(index * limit).limit(limit)) {
+            for (Document memberData : collection.find().sort(descending("textscore", "voicescore", "id")).skip(page * limit).limit(limit)) {
                 count++;
                 JsonObject jsonObject = new Gson().fromJson(memberData.toJson(), JsonObject.class);
                 jsonObject.remove("_id");
-                jsonObject.addProperty("pos", count + (index * limit));
+                jsonObject.addProperty("pos", count + (page * limit));
+                int msgs = jsonObject.remove("textscore").getAsInt() / (int)Config.getConfigValue(guild, "values", "msgsperpoint");
+                int vcseconds = jsonObject.remove("voicescore").getAsInt() / (int)Config.getConfigValue(guild, "values", "vcsecondsperpoint");
+                jsonObject.addProperty("textscore", msgs);
+                jsonObject.addProperty("voicescore", vcseconds);
                 jsonArray.add(jsonObject);
             }
             respObject.add("members", jsonArray);
-            ctx.result(String.valueOf(respObject));
+            ctx.json(String.valueOf(respObject));
         }
     }
 
-    private void getUser(Context ctx) {
-        User user = jda.getUserById(ctx.pathParam("userId"));
+    public void getUser(Context ctx) {
+        User user = jda.getUserById(ctx.pathParamAsClass("userId", String.class).get());
         JsonObject jsonObject = new JsonObject();
         if (user == null) {
             jsonObject.addProperty("404", "User not found");
@@ -148,6 +144,6 @@ public class DataApi {
             jsonObject.addProperty("name", user.getName() + "#" + user.getDiscriminator());
             jsonObject.addProperty("pfp", user.getAvatarId());
         }
-        ctx.result(String.valueOf(jsonObject));
+        ctx.json(String.valueOf(jsonObject));
     }
 }

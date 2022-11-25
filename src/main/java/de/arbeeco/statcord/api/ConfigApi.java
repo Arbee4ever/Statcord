@@ -17,24 +17,21 @@ import java.util.Map;
 import java.util.Objects;
 
 import static de.arbeeco.statcord.api.Api.isAuthorized;
+import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class ConfigApi {
     private final JDA jda;
 
-    public ConfigApi(JDA jda, Javalin app) {
+    public ConfigApi(JDA jda) {
         this.jda = jda;
-        app
-                .get("/guilds/{guildId}/config", this::getGuildConfig)
-                .patch("/guilds/{guildId}/{category}", this::setGuildConfig)
-                .get("/guilds/{guildId}/{category}", this::getGuildConfigCategory);
     }
 
-    private void getGuildConfig(Context ctx) {
+    public void getGuildConfig(Context ctx) {
         if (!isAuthorized(ctx)) return;
-        ctx.result(getConfig(ctx));
+        ctx.json(String.valueOf(getConfig(ctx)));
     }
 
-    private void setGuildConfig(Context ctx) {
+    public void setGuildConfig(Context ctx) {
         if (!isAuthorized(ctx)) return;
         try {
             JsonParser.parseString(ctx.body());
@@ -47,19 +44,19 @@ public class ConfigApi {
         body.forEach((name, value) -> {
             Config.setConfigValue(guild, categoryName, name, value);
         });
-        ctx.result(getConfig(ctx));
+        ctx.json(String.valueOf(getConfig(ctx)));
         ctx.status(200);
     }
 
-    private void getGuildConfigCategory(Context ctx) {
+    public void getGuildConfigCategory(Context ctx) {
         if (!isAuthorized(ctx)) return;
         Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
         Map data = Config.getConfigCategory(guild, ctx.pathParam("category"));
-        ctx.result(String.valueOf(data));
+        ctx.json(String.valueOf(data));
         ctx.status(200);
     }
 
-    private String getConfig(Context ctx) {
+    private JsonObject getConfig(Context ctx) {
         Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
         FindIterable<Document> collection = Config.getGuildConfig(guild).find();
         JsonObject respObj = new JsonObject();
@@ -68,6 +65,6 @@ public class ConfigApi {
             String id = document.remove("id").toString();
             respObj.add(id, new Gson().fromJson(document.toJson(), JsonObject.class));
         }
-        return String.valueOf(respObj);
+        return respObj;
     }
 }
