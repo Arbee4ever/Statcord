@@ -4,4 +4,6 @@
 /build/classes/java/main/
 /.idea
 /gradle
-/config.json
+/config.json5
+/ERROR.log
+/logs
