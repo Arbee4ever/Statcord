@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.mongodb.client.MongoCollection;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
-import io.javalin.Javalin;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import net.dv8tion.jda.api.JDA;
@@ -20,8 +19,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.mongodb.client.model.Sorts.descending;
-import static io.javalin.apibuilder.ApiBuilder.path;
-import static io.javalin.apibuilder.ApiBuilder.get;
 
 public class DataApi {
     private final JDA jda;
@@ -69,30 +66,18 @@ public class DataApi {
     }
 
     public void getGuildById(Context ctx) {
-        Guild guild = jda.getGuildById(ctx.pathParam("guildId"));
+        Guild guild = jda.getGuildById(ctx.pathParamAsClass("guildId", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid Guild-ID")));
         JsonObject respObject = new JsonObject();
         if (guild == null) {
-            JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("404", "Guild not found");
-            ctx.status(404);
-            ctx.json(String.valueOf(jsonObject));
+            ctx.status(404).result("Guild not found");
         } else {
             if (ctx.queryParams("user").size() != 0) {
-                User user = null;
-                if (!Objects.equals(ctx.queryParams("user").get(0), "")) {
-                    user = jda.getUserById(ctx.queryParams("user").get(0));
-                }
+                User user = jda.getUserById(ctx.queryParamAsClass("user", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid User-ID")));
                 if (user == null) {
-                    JsonObject jsonObject = new JsonObject();
-                    jsonObject.addProperty("404", "User not found");
-                    ctx.status(404);
-                    ctx.json(String.valueOf(jsonObject));
+                    ctx.status(404).result("User not found");
                     return;
                 } else if (guild.getMemberById(user.getId()) == null) {
-                    JsonObject jsonObject = new JsonObject();
-                    jsonObject.addProperty("404", "Member not found");
-                    ctx.status(404);
-                    ctx.json(String.valueOf(jsonObject));
+                    ctx.status(404).result("Member not found");
                     return;
                 }
                 JsonObject jsonObject = new JsonObject();
@@ -116,7 +101,7 @@ public class DataApi {
             MongoCollection<Document> collection = Data.getGuildData(guild);
             JsonArray jsonArray = new JsonArray();
             int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(0);
-            int limit = 100;
+            int limit = 50;
             int count = 0;
             for (Document memberData : collection.find().sort(descending("textscore", "voicescore", "id")).skip(page * limit).limit(limit)) {
                 count++;
@@ -135,15 +120,14 @@ public class DataApi {
     }
 
     public void getUser(Context ctx) {
-        User user = jda.getUserById(ctx.pathParamAsClass("userId", String.class).get());
-        JsonObject jsonObject = new JsonObject();
+        User user = jda.getUserById(ctx.pathParamAsClass("userId", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid User-ID")));
         if (user == null) {
-            jsonObject.addProperty("404", "User not found");
-            ctx.status(404);
+            ctx.status(404).result("User not found");
         } else {
+            JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty("name", user.getName() + "#" + user.getDiscriminator());
             jsonObject.addProperty("pfp", user.getAvatarId());
+            ctx.json(String.valueOf(jsonObject));
         }
-        ctx.json(String.valueOf(jsonObject));
     }
 }

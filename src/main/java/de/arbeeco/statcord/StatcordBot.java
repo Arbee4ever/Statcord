@@ -19,11 +19,13 @@ import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import org.discordbots.api.client.DiscordBotListAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -99,11 +101,24 @@ public class StatcordBot {
             }
         }).start();
         //endregion
+
+        //region top.gg
+        DiscordBotListAPI api = new DiscordBotListAPI.Builder()
+                .token(config.get("top_gg_api_key").getAsString())
+                .botId(config.get("bot_id").getAsString())
+                .build();
+
+        List<Integer> shardServerCounts = new ArrayList<>();
+        for (JDA shard : shardManager.getShards()) {
+            shardServerCounts.add(shard.getGuilds().size());
+        }
+        api.setStats(shardServerCounts);
+        //endregion
     }
 
     public static void loadConfig() {
         try {
-            fileReader = new FileReader("config.json");
+            fileReader = new FileReader("config.json5");
             config = JsonParser.parseReader(fileReader).getAsJsonObject();
         } catch (FileNotFoundException e) {
             logger.info("config.json missing.");

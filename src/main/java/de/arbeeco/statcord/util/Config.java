@@ -6,9 +6,11 @@ import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
 import de.arbeeco.statcord.StatcordBot;
 import io.javalin.http.NotFoundResponse;
+import jakarta.annotation.Nonnull;
 import net.dv8tion.jda.api.entities.Guild;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -52,6 +54,7 @@ public class Config {
         return map;
     }
 
+    @NotNull
     public static Object getConfigValue(Guild guild, String configCategory, String valueName) {
         Object value = getConfigCategory(guild, configCategory).get(valueName);
         if (value == null) return null;
