@@ -1,6 +1,7 @@
 package de.arbeeco.statcord.events;
 
 import com.mongodb.client.MongoCollection;
+import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.UserDoc;
 import net.dv8tion.jda.api.entities.Guild;
@@ -26,10 +27,10 @@ public class GuildMemberEvents extends ListenerAdapter {
     @Override
     public void onGuildMemberRemove(@NotNull GuildMemberRemoveEvent event) {
         Guild guild = event.getGuild();
-        MongoCollection<Document> collection = Data.getGuildData(guild);
-        Member user = event.getMember();
-        if (!user.getUser().isBot()) {
-            collection.deleteOne(eq("id", user.getId()));
+        if (!(boolean)Config.getConfigValue(guild, "data", "deleteonleave")) return;
+        Member member = event.getMember();
+        if (!member.getUser().isBot()) {
+            Data.deleteMemberData(guild, member.getId());
         }
     }
 }

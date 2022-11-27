@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -37,7 +36,7 @@ public class StatcordBot {
     static FileReader fileReader;
     static ConnectionString connectionString;
     static MongoClientSettings settings;
-    public static MongoClient mongoClient;
+    static MongoClient mongoClient;
     public static MongoDatabase guildsDB;
     public static MongoDatabase configsDB;
     //endregion
@@ -101,19 +100,6 @@ public class StatcordBot {
             }
         }).start();
         //endregion
-
-        //region top.gg
-        DiscordBotListAPI api = new DiscordBotListAPI.Builder()
-                .token(config.get("top_gg_api_key").getAsString())
-                .botId(config.get("bot_id").getAsString())
-                .build();
-
-        List<Integer> shardServerCounts = new ArrayList<>();
-        for (JDA shard : shardManager.getShards()) {
-            shardServerCounts.add(shard.getGuilds().size());
-        }
-        api.setStats(shardServerCounts);
-        //endregion
     }
 
     public static void loadConfig() {
@@ -133,5 +119,17 @@ public class StatcordBot {
         mongoClient = MongoClients.create(settings);
         guildsDB = mongoClient.getDatabase("Guilds");
         configsDB = mongoClient.getDatabase("Configs");
+    }
+
+    public static void updateTopGG() {
+        //region top.gg
+        DiscordBotListAPI api = new DiscordBotListAPI.Builder()
+                .token(config.get("top_gg_api_key").getAsString())
+                .botId(config.get("bot_id").getAsString())
+                .build();
+
+        api.setStats(shardManager.getGuilds().size());
+        logger.info("Sent Servercount of {} to top.gg!", shardManager.getGuilds().size());
+        //endregion
     }
 }
