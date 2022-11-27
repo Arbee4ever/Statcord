@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 public class GuildVoiceEvents extends ListenerAdapter {
     @Override
     public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
+        if (event.getMember().getUser().isBot()) return;
         if (event.getChannelJoined() != null && event.getChannelLeft() == null) {
             Data.setVcStart(event.getGuild(), event.getMember());
         }

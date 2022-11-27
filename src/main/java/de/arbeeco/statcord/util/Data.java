@@ -1,19 +1,8 @@
 package de.arbeeco.statcord.util;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
-import com.mongodb.ServerApi;
-import com.mongodb.ServerApiVersion;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
-import de.arbeeco.statcord.StatcordBot;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import org.bson.Document;
@@ -21,8 +10,6 @@ import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.XYChart;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -32,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.model.Filters.eq;
 import static de.arbeeco.statcord.StatcordBot.guildsDB;
-import static de.arbeeco.statcord.StatcordBot.logger;
 import static java.lang.Math.min;
 
 public class Data {
@@ -59,7 +45,6 @@ public class Data {
         MongoCollection<Document> collection = guildsDB.getCollection(member.getGuild().getId());
         return collection.find(eq("id", member.getId())).first().get(valueName);
     }
-
     public static UpdateResult setMemberValue(Member member, String valueName, Object newValue) {
         MongoCollection<Document> collection = guildsDB.getCollection(member.getGuild().getId());
         if (newValue == null) {
@@ -67,10 +52,9 @@ public class Data {
         }
         return collection.updateOne(eq("id", member.getId()), Updates.set(valueName, newValue));
     }
-
-    public static boolean deleteMemberData(Guild guild, Member member) {
+    public static boolean deleteMemberData(Guild guild, String id) {
         MongoCollection<Document> collection = guildsDB.getCollection(guild.getId());
-        collection.deleteOne(eq("id", member.getId()));
+        collection.deleteOne(eq("id", id));
         return true;
     }
     //endregion

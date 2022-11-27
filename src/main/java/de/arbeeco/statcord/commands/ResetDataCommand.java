@@ -17,7 +17,7 @@ public class ResetDataCommand {
             if (event.getOption("user") != null) {
                 Member member = event.getOption("user").getAsMember();
                 if (!member.getUser().isBot()) {
-                    Data.deleteMemberData(event.getGuild(), member);
+                    Data.deleteMemberData(event.getGuild(), member.getId());
                     MongoCollection<Document> collection = Data.getGuildData(member.getGuild());
                     collection.insertOne(new UserDoc(member));
                     event.replyEmbeds(new StatcordEmbed().setDescription("Sucessfully reset all data for " + member.getAsMention() + ".")

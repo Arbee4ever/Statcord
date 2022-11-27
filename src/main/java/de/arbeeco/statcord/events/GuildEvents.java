@@ -10,10 +10,11 @@ import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 
+import static de.arbeeco.statcord.StatcordBot.shardManager;
+
 public class GuildEvents extends ListenerAdapter {
     @Override
     public void onGuildJoin(@NotNull GuildJoinEvent event) {
-        StatcordBot.shardManager.setActivity(Activity.watching(event.getJDA().getGuilds().size() + " Servers."));
         Guild guild = event.getGuild();
         JDA jda = event.getJDA();
         Data.initNewGuildData(event.getGuild());
@@ -21,11 +22,12 @@ public class GuildEvents extends ListenerAdapter {
                 user.openPrivateChannel()
                         .flatMap(privateChannel -> privateChannel.sendMessage("Joined Server: " + guild.getName() + " Membercount:" + (guild.getMemberCount() - 1)))
                         .queue());
+        shardManager.setActivity(Activity.watching(event.getJDA().getGuilds().size() + " Servers."));
+        StatcordBot.updateTopGG();
     }
 
     @Override
     public void onGuildLeave(@NotNull GuildLeaveEvent event) {
-        StatcordBot.shardManager.setActivity(Activity.watching(event.getJDA().getGuilds().size() + " Servers."));
         Guild guild = event.getGuild();
         JDA jda = event.getJDA();
         Data.deleteGuildData(guild);
@@ -33,5 +35,7 @@ public class GuildEvents extends ListenerAdapter {
                 user.openPrivateChannel()
                         .flatMap(privateChannel -> privateChannel.sendMessage("Left Server: " + guild.getName() + " Membercount:" + (guild.getMemberCount() - 1)))
                         .queue());
+        shardManager.setActivity(Activity.watching(event.getJDA().getGuilds().size() + " Servers."));
+        StatcordBot.updateTopGG();
     }
 }

@@ -11,6 +11,7 @@ import io.javalin.http.Context;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 
@@ -101,15 +102,22 @@ public class DataApi {
             MongoCollection<Document> collection = Data.getGuildData(guild);
             JsonArray jsonArray = new JsonArray();
             int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(0);
-            int limit = 50;
+            int limit = 100;
             int count = 0;
+            int msgsperpoint = (int) Config.getConfigValue(guild, "values", "msgsperpoint");
+            int vcsecondsperpoint = (int) Config.getConfigValue(guild, "values", "vcsecondsperpoint");
             for (Document memberData : collection.find().sort(descending("textscore", "voicescore", "id")).skip(page * limit).limit(limit)) {
+                Member member = guild.getMemberById(memberData.getString("id"));
+                if (member == null && (boolean) Config.getConfigValue(guild, "data", "deleteonleave")) {
+                    Data.deleteMemberData(guild, (String) memberData.get("id"));
+                    continue;
+                }
                 count++;
                 JsonObject jsonObject = new Gson().fromJson(memberData.toJson(), JsonObject.class);
                 jsonObject.remove("_id");
                 jsonObject.addProperty("pos", count + (page * limit));
-                int msgs = jsonObject.remove("textscore").getAsInt() / (int)Config.getConfigValue(guild, "values", "msgsperpoint");
-                int vcseconds = jsonObject.remove("voicescore").getAsInt() / (int)Config.getConfigValue(guild, "values", "vcsecondsperpoint");
+                int msgs = jsonObject.remove("textscore").getAsInt() / msgsperpoint;
+                int vcseconds = jsonObject.remove("voicescore").getAsInt() / vcsecondsperpoint;
                 jsonObject.addProperty("textscore", msgs);
                 jsonObject.addProperty("voicescore", vcseconds);
                 jsonArray.add(jsonObject);
