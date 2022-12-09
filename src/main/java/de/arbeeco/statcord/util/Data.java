@@ -1,14 +1,15 @@
 package de.arbeeco.statcord.util;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
-import de.arbeeco.statcord.StatcordBot;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.UserSnowflake;
 import org.bson.Document;
 import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.XYChart;
@@ -22,7 +23,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.mod;
 import static de.arbeeco.statcord.StatcordBot.guildsDB;
 import static java.lang.Math.min;
 
@@ -150,12 +150,11 @@ public class Data {
         List<Role> removeRoles = new ArrayList<>();
 
         for (Map.Entry<String, JsonElement> possibleRank : ranks.getAsJsonObject().asMap().entrySet()) {
-            if (Integer.valueOf(possibleRank.getKey()) < value) {
-                Role role = member.getGuild().getRoleById(possibleRank.getValue().getAsJsonObject().get("role").getAsString());
+            Role role = member.getGuild().getRoleById(possibleRank.getValue().getAsJsonObject().get("role").getAsString());
+            if (Integer.valueOf(possibleRank.getKey()) <= value) {
                 if (role == null) continue;
                 addRoles.add(role);
-            } else if (Integer.valueOf(possibleRank.getKey()) > value) {
-                Role role = member.getGuild().getRoleById(possibleRank.getValue().getAsJsonObject().get("role").getAsString());
+            } else {
                 if (role == null) continue;
                 if (possibleRank.getValue().getAsJsonObject().get("static").getAsBoolean()) continue;
                 removeRoles.add(role);
