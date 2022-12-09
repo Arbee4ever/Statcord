@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.in;
 
 public class Config {
     public static void newGuildConfig(Guild guild) {
@@ -54,7 +55,6 @@ public class Config {
         return map;
     }
 
-    @NotNull
     public static Object getConfigValue(Guild guild, String configCategory, String valueName) {
         Object value = getConfigCategory(guild, configCategory).get(valueName);
         if (value == null) return null;

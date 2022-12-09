@@ -11,9 +11,9 @@ public class UserDoc extends Document {
         this
                 .append("id", member.getId())
                 .append("name", member.getUser().getName())
-                .append("textscore", 0)
+                .append("textmessages", 0)
                 .append("texthistory", List.of(0))
-                .append("voicescore", 0)
+                .append("voiceseconds", 0)
                 .append("voicehistory", List.of(0))
                 .append("lastmsg", new Timestamp(System.currentTimeMillis()));
     }

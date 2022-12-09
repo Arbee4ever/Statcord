@@ -106,7 +106,7 @@ public class DataApi {
             int count = 0;
             int msgsperpoint = (int) Config.getConfigValue(guild, "values", "msgsperpoint");
             int vcsecondsperpoint = (int) Config.getConfigValue(guild, "values", "vcsecondsperpoint");
-            for (Document memberData : collection.find().sort(descending("textscore", "voicescore", "id")).skip(page * limit).limit(limit)) {
+            for (Document memberData : collection.find().sort(descending("textmessages", "voiceseconds", "id")).skip(page * limit).limit(limit)) {
                 Member member = guild.getMemberById(memberData.getString("id"));
                 if (member == null && (boolean) Config.getConfigValue(guild, "data", "deleteonleave")) {
                     Data.deleteMemberData(guild, (String) memberData.get("id"));
@@ -116,10 +116,10 @@ public class DataApi {
                 JsonObject jsonObject = new Gson().fromJson(memberData.toJson(), JsonObject.class);
                 jsonObject.remove("_id");
                 jsonObject.addProperty("pos", count + (page * limit));
-                int msgs = jsonObject.remove("textscore").getAsInt() / msgsperpoint;
-                int vcseconds = jsonObject.remove("voicescore").getAsInt() / vcsecondsperpoint;
-                jsonObject.addProperty("textscore", msgs);
-                jsonObject.addProperty("voicescore", vcseconds);
+                int msgs = jsonObject.remove("textmessages").getAsInt() / msgsperpoint;
+                int vcseconds = jsonObject.remove("voiceseconds").getAsInt() / vcsecondsperpoint;
+                jsonObject.addProperty("textmessages", msgs);
+                jsonObject.addProperty("voiceseconds", vcseconds);
                 jsonArray.add(jsonObject);
             }
             respObject.add("members", jsonArray);

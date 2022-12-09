@@ -24,7 +24,7 @@ public class AddCommand {
                 if (event.getOption("voicescore") != null) {
                     addVoiceScore = event.getOption("voicescore").getAsInt();
                 }
-                Data.addTextScore(member, addTextScore);
+                Data.addTextScore(member, addTextScore, false);
                 Data.addVoiceSeconds(member, addVoiceScore);
                 event.replyEmbeds(new StatcordEmbed().setDescription(member.getAsMention())
                         .addField("Textcore",  textScoreOld + " + " + addTextScore + " = " + Data.getTextScore(member), true)
