@@ -19,7 +19,7 @@ public class LeaderboardCommand {
                 .setTitle("View full Leaderboard!", "https://statcord.arbeeco.de/leaderboards/" + event.getGuild().getId());
         String description = "";
         int count = 0;
-        for (Document memberData : collection.find().sort(descending("textmessages", "voiceseconds")).limit(10)) {
+        for (Document memberData : collection.find().sort(descending("textscore", "voicescore")).limit(10)) {
             count++;
             Member  member = guild.getMemberById(memberData.get("id").toString());
             int txtscore = Data.getTextScore(member);

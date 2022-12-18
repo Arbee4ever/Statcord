@@ -1,14 +1,10 @@
 package de.arbeeco.statcord.util;
 
-import com.google.gson.*;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
-import de.arbeeco.statcord.StatcordBot;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.UserSnowflake;
 import org.bson.Document;
 import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.XYChart;
@@ -22,7 +18,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.mod;
 import static de.arbeeco.statcord.StatcordBot.guildsDB;
 import static java.lang.Math.min;
 
@@ -50,7 +45,6 @@ public class Data {
         MongoCollection<Document> collection = guildsDB.getCollection(member.getGuild().getId());
         return collection.find(eq("id", member.getId())).first().get(valueName);
     }
-
     public static UpdateResult setMemberValue(Member member, String valueName, Object newValue) {
         MongoCollection<Document> collection = guildsDB.getCollection(member.getGuild().getId());
         if (newValue == null) {
@@ -58,7 +52,6 @@ public class Data {
         }
         return collection.updateOne(eq("id", member.getId()), Updates.set(valueName, newValue));
     }
-
     public static boolean deleteMemberData(Guild guild, String id) {
         MongoCollection<Document> collection = guildsDB.getCollection(guild.getId());
         collection.deleteOne(eq("id", id));
@@ -139,56 +132,25 @@ public class Data {
             }
         }
     }
-
-    private static void updateRoles(Member member, int value, String modified) {
-        Object configValue = Config.getConfigValue(member.getGuild(), "roles", modified);
-        if (configValue == null) return;
-        JsonObject ranks = new Gson().toJsonTree(configValue).getAsJsonObject();
-        if (ranks.equals(JsonNull.INSTANCE)) return;
-
-        List<Role> addRoles = new ArrayList<>();
-        List<Role> removeRoles = new ArrayList<>();
-
-        for (Map.Entry<String, JsonElement> possibleRank : ranks.getAsJsonObject().asMap().entrySet()) {
-            if (Integer.valueOf(possibleRank.getKey()) < value) {
-                Role role = member.getGuild().getRoleById(possibleRank.getValue().getAsJsonObject().get("role").getAsString());
-                if (role == null) continue;
-                addRoles.add(role);
-            } else if (Integer.valueOf(possibleRank.getKey()) > value) {
-                Role role = member.getGuild().getRoleById(possibleRank.getValue().getAsJsonObject().get("role").getAsString());
-                if (role == null) continue;
-                if (possibleRank.getValue().getAsJsonObject().get("static").getAsBoolean()) continue;
-                removeRoles.add(role);
-            }
-        }
-
-        member.getGuild().modifyMemberRoles(member, addRoles, removeRoles).queue();
-    }
     //endregion
 
     //region Text-Interactors
-    public static void addTextScore(Member member, int x, boolean cooldown) {
+    public static void addTextScore(Member member, int x) {
         Date lastm = Data.getLastMsg(member);
         Date now = Date.from(Instant.now());
-        if ((lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown") || !cooldown) {
-            if (cooldown) {
-                updateLastMsg(member);
-            }
-            setMemberValue(member, "textmessages", getTextMessages(member) + x);
+        if ((lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown")) {
+            updateLastMsg(member);
+            setMemberValue(member, "textscore", getTextMessages(member) + x);
             appendTextHistory(member, false, x);
         }
-        int textMessages = getTextMessages(member);
-        updateRoles(member, textMessages, "textmessages");
-        int textScore = getTextScore(member);
-        updateRoles(member, textScore, "textscore");
     }
 
     public static int getTextScore(Member member) {
-        return (int) getMemberValue(member, "textmessages") / (int) Config.getConfigValue(member.getGuild(), "values", "msgsperpoint");
+        return (int) getMemberValue(member, "textscore") / (int) Config.getConfigValue(member.getGuild(), "values", "msgsperpoint");
     }
 
     public static int getTextMessages(Member member) {
-        return (int) getMemberValue(member, "textmessages");
+        return (int) getMemberValue(member, "textscore");
     }
 
     public static Date getLastMsg(Member member) {
@@ -227,7 +189,7 @@ public class Data {
     //endregion
 
     //region VC-Interactors
-    public static void setVcStart(Member member) {
+    public static void setVcStart(Guild guild, Member member) {
         setMemberValue(member, "voicestart", new Timestamp(System.currentTimeMillis()));
     }
 
@@ -250,19 +212,15 @@ public class Data {
     }
 
     public static void addVoiceSeconds(Member member, int x) {
-        setMemberValue(member, "voiceseconds", getVoiceSeconds(member) + x);
-        int voicescore = getVoiceScore(member);
-        updateRoles(member, voicescore, "voicescore");
-        int voiceseconds = getVoiceSeconds(member);
-        updateRoles(member, voiceseconds, "voiceseconds");
+        setMemberValue(member, "voicescore", getVoiceSeconds(member) + x);
     }
 
     public static int getVoiceScore(Member member) {
-        return (int) getMemberValue(member, "voiceseconds") / (int) Config.getConfigValue(member.getGuild(), "values", "vcsecondsperpoint");
+        return (int) getMemberValue(member, "voicescore") / (int) Config.getConfigValue(member.getGuild(), "values", "vcsecondsperpoint");
     }
 
     public static int getVoiceSeconds(Member member) {
-        return (int) getMemberValue(member, "voiceseconds");
+        return (int) getMemberValue(member, "voicescore");
     }
 
     public static List<Number> getVoiceHistory(Member member, boolean unprocessed) {
