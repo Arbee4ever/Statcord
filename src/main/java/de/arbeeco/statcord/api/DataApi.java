@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Sorts;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
 import io.javalin.http.BadRequestResponse;
@@ -112,11 +113,8 @@ public class DataApi {
             int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(0);
             int limit = 100;
             int count = 0;
-            FindIterable<Document> data = collection.find().sort(descending( "textmessages", "voiceseconds", "id")).skip(page * limit).limit(limit);
-            List<Document> dataList = new ArrayList<>();
-            data.into(dataList);
-            dataList.sort(Comparator.comparingInt(el -> el.getInteger("textmessages") - el.getInteger("voiceseconds")));
-            for (Document memberData : dataList) {
+            FindIterable<Document> data = collection.find().sort(Sorts.descending("voicescore", "textscore", "id")).skip(page * limit).limit(limit);
+            for (Document memberData : data) {
                 Member member = guild.getMemberById(memberData.getString("id"));
                 if (member == null && (boolean) Config.getConfigValue(guild, "data", "deleteonleave")) {
                     Data.deleteMemberData(guild, (String) memberData.get("id"));
