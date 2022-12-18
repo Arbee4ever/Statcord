@@ -60,9 +60,6 @@ public class Api {
                             get("{category}", configApi::getGuildConfigCategory, Permissions.GUILD_CONFIG);
                         });
                     });
-                    path("user", () -> {
-                        get("{userId}", dataApi::getUser);
-                    });
                 })
                 .start();
 
