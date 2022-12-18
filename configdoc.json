@@ -8,5 +8,9 @@
   {
     "id": "data",
     "deleteonleave": true
+  },
+  {
+    "id": "roles",
+    "roles": []
   }
 ]

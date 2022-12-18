@@ -2,7 +2,9 @@ package de.arbeeco.statcord.api;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
@@ -14,8 +16,10 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -98,15 +102,21 @@ public class DataApi {
             guildData.addProperty("textcount", guild.getTextChannels().size());
             guildData.addProperty("voicecount", guild.getVoiceChannels().size());
             guildData.addProperty("rolecount", guild.getRoles().size());
+            JsonObject values = new Gson().toJsonTree(Config.getConfigCategory(guild, "values")).getAsJsonObject();
+            values.remove("_id");
+            values.remove("id");
+            guildData.add("values", values);
             respObject.add("guild", guildData);
             MongoCollection<Document> collection = Data.getGuildData(guild);
             JsonArray jsonArray = new JsonArray();
             int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(0);
             int limit = 100;
             int count = 0;
-            int msgsperpoint = (int) Config.getConfigValue(guild, "values", "msgsperpoint");
-            int vcsecondsperpoint = (int) Config.getConfigValue(guild, "values", "vcsecondsperpoint");
-            for (Document memberData : collection.find().sort(descending("textmessages", "voiceseconds", "id")).skip(page * limit).limit(limit)) {
+            FindIterable<Document> data = collection.find().sort(descending( "textmessages", "voiceseconds", "id")).skip(page * limit).limit(limit);
+            List<Document> dataList = new ArrayList<>();
+            data.into(dataList);
+            dataList.sort(Comparator.comparingInt(el -> el.getInteger("textmessages") - el.getInteger("voiceseconds")));
+            for (Document memberData : dataList) {
                 Member member = guild.getMemberById(memberData.getString("id"));
                 if (member == null && (boolean) Config.getConfigValue(guild, "data", "deleteonleave")) {
                     Data.deleteMemberData(guild, (String) memberData.get("id"));
@@ -115,27 +125,18 @@ public class DataApi {
                 count++;
                 JsonObject jsonObject = new Gson().fromJson(memberData.toJson(), JsonObject.class);
                 jsonObject.remove("_id");
+                JsonElement name = jsonObject.remove("name");
+                jsonObject.addProperty("name", member.getEffectiveName() + "#" + member.getUser().getDiscriminator());
                 jsonObject.addProperty("pos", count + (page * limit));
-                int msgs = jsonObject.remove("textmessages").getAsInt() / msgsperpoint;
-                int vcseconds = jsonObject.remove("voiceseconds").getAsInt() / vcsecondsperpoint;
+                jsonObject.addProperty("avatar", member.getUser().getAvatarUrl());
+                int msgs = jsonObject.remove("textmessages").getAsInt();
+                int vcseconds = jsonObject.remove("voiceseconds").getAsInt();
                 jsonObject.addProperty("textmessages", msgs);
                 jsonObject.addProperty("voiceseconds", vcseconds);
                 jsonArray.add(jsonObject);
             }
             respObject.add("members", jsonArray);
             ctx.json(String.valueOf(respObject));
-        }
-    }
-
-    public void getUser(Context ctx) {
-        User user = jda.getUserById(ctx.pathParamAsClass("userId", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid User-ID")));
-        if (user == null) {
-            ctx.status(404).result("User not found");
-        } else {
-            JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("name", user.getName() + "#" + user.getDiscriminator());
-            jsonObject.addProperty("pfp", user.getAvatarId());
-            ctx.json(String.valueOf(jsonObject));
         }
     }
 }

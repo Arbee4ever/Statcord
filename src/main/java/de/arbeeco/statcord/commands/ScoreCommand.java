@@ -26,6 +26,7 @@ public class ScoreCommand {
                     .queue();
             return;
         }
+        int txtmessages = Data.getTextMessages(member);
         int vcseconds = Data.getVoiceSeconds(member);
         String hours = "";
         String minutes = "0m";
@@ -46,7 +47,7 @@ public class ScoreCommand {
         JDAImpl jda = (JDAImpl)event.getJDA();
         event.reply(StatcordMessage.fromJson(jda.getEntityBuilder(), string)).queue();*/
         event.replyEmbeds(new StatcordEmbed()
-                .setDescription(member.getAsMention() + "'s current Score is: **" + (txtscore + vcscore) + "** (**" + txtscore + "** text, **" + timeString + "** VC).")
+                .setDescription(member.getAsMention() + "'s current Score is: **" + (txtscore + vcscore) + "** (**" + txtmessages + "** text, **" + timeString + "** VC).")
                 .setColor(Color.decode("#6f58ac"))
                 .build())
                 .queue();

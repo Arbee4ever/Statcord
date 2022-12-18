@@ -4,16 +4,11 @@ import com.mongodb.client.MongoCollection;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
 import de.arbeeco.statcord.util.UserDoc;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Mentions;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.internal.entities.InteractionMentions;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.*;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -64,6 +59,6 @@ public class MessageSentEvent extends ListenerAdapter {
                 Data.appendTextHistory(member, true, 0);
             }
         }
-        Data.addTextScore(member, 1, true);
+        Data.addTextMessages(member, 1, true);
     }
 }
