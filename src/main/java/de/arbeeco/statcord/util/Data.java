@@ -1,9 +1,6 @@
 package de.arbeeco.statcord.util;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
@@ -141,23 +138,41 @@ public class Data {
     }
 
     private static void updateRoles(Member member, int value, String modified) {
-        Object configValue = Config.getConfigValue(member.getGuild(), "roles", modified);
+        Object configValue = Config.getConfigValue(member.getGuild(), "roles", "roles");
         if (configValue == null) return;
-        JsonObject ranks = new Gson().toJsonTree(configValue).getAsJsonObject();
-        if (ranks.equals(JsonNull.INSTANCE)) return;
+        JsonArray roles = new Gson().toJsonTree(configValue).getAsJsonArray();
+        if (roles.equals(JsonNull.INSTANCE)) return;
 
         List<Role> addRoles = new ArrayList<>();
         List<Role> removeRoles = new ArrayList<>();
 
-        for (Map.Entry<String, JsonElement> possibleRank : ranks.getAsJsonObject().asMap().entrySet()) {
-            Role role = member.getGuild().getRoleById(possibleRank.getValue().getAsJsonObject().get("role").getAsString());
-            if (Integer.valueOf(possibleRank.getKey()) <= value) {
-                if (role == null) continue;
-                addRoles.add(role);
+        for (JsonElement possibleRank : roles) {
+            if (!possibleRank.getAsJsonObject().get("requirements").getAsJsonObject().has(modified)) continue;
+            if (possibleRank.getAsJsonObject().get("requirements").getAsJsonObject().get(modified).getAsInt() <= value) {
+                boolean requirementsMet = true;
+                if (possibleRank.getAsJsonObject().get("requirements").getAsJsonObject().size() > 1) {
+                    for (Map.Entry<String, JsonElement> req : possibleRank.getAsJsonObject().get("requirements").getAsJsonObject().entrySet()) {
+                        Object value2 = getMemberValue(member, req.getKey());
+                        if (value2 == null) {
+                            requirementsMet = false;
+                            continue;
+                        }
+                        if (!(req.getValue().getAsInt() <= (int) value2)) requirementsMet = false;
+                    }
+                }
+                if (!requirementsMet) continue;
+                for (Map.Entry<String, JsonElement> rank : possibleRank.getAsJsonObject().get("roles").getAsJsonObject().entrySet()) {
+                    Role role = member.getGuild().getRoleById(rank.getKey());
+                    if (role == null) continue;
+                    addRoles.add(role);
+                }
             } else {
-                if (role == null) continue;
-                if (possibleRank.getValue().getAsJsonObject().get("static").getAsBoolean()) continue;
-                removeRoles.add(role);
+                for (Map.Entry<String, JsonElement> rank : possibleRank.getAsJsonObject().get("roles").getAsJsonObject().entrySet()) {
+                    Role role = member.getGuild().getRoleById(rank.getKey());
+                    if (role == null) continue;
+                    if (rank.getValue().getAsJsonObject().get("static").getAsBoolean()) continue;
+                    removeRoles.add(role);
+                }
             }
         }
 
@@ -166,10 +181,10 @@ public class Data {
     //endregion
 
     //region Text-Interactors
-    public static void addTextScore(Member member, int x, boolean cooldown) {
+    public static void addTextMessages(Member member, int x, boolean cooldown) {
         Date lastm = Data.getLastMsg(member);
         Date now = Date.from(Instant.now());
-        if ((lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown") || !cooldown) {
+        if ((lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown") || !cooldown || lastm == null) {
             if (cooldown) {
                 updateLastMsg(member);
             }
@@ -178,8 +193,6 @@ public class Data {
         }
         int textMessages = getTextMessages(member);
         updateRoles(member, textMessages, "textmessages");
-        int textScore = getTextScore(member);
-        updateRoles(member, textScore, "textscore");
     }
 
     public static int getTextScore(Member member) {
@@ -191,7 +204,12 @@ public class Data {
     }
 
     public static Date getLastMsg(Member member) {
-        return (Date) getMemberValue(member, "lastmsg");
+        Object lastm = getMemberValue(member, "lastmsg");
+        if (lastm == null) {
+            return null;
+        } else {
+            return (Date) lastm;
+        }
     }
 
     public static void updateLastMsg(Member member) {
@@ -250,8 +268,6 @@ public class Data {
 
     public static void addVoiceSeconds(Member member, int x) {
         setMemberValue(member, "voiceseconds", getVoiceSeconds(member) + x);
-        int voicescore = getVoiceScore(member);
-        updateRoles(member, voicescore, "voicescore");
         int voiceseconds = getVoiceSeconds(member);
         updateRoles(member, voiceseconds, "voiceseconds");
     }

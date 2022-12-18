@@ -2,7 +2,6 @@ package de.arbeeco.statcord.commands;
 
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -14,8 +13,8 @@ public class AddCommand {
         if (event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
             Member member = event.getOption("user").getAsMember();
             if (!member.getUser().isBot()) {
-                int textScoreOld = Data.getTextScore(member);
-                int voiceScoreOld = Data.getVoiceScore(member);
+                int textScoreOld = Data.getTextMessages(member);
+                int voiceScoreOld = Data.getVoiceSeconds(member);
                 int addTextScore = 0;
                 int addVoiceScore = 0;
                 if (event.getOption("textscore") != null) {
@@ -24,11 +23,11 @@ public class AddCommand {
                 if (event.getOption("voicescore") != null) {
                     addVoiceScore = event.getOption("voicescore").getAsInt();
                 }
-                Data.addTextScore(member, addTextScore, false);
+                Data.addTextMessages(member, addTextScore, false);
                 Data.addVoiceSeconds(member, addVoiceScore);
                 event.replyEmbeds(new StatcordEmbed().setDescription(member.getAsMention())
-                        .addField("Textcore",  textScoreOld + " + " + addTextScore + " = " + Data.getTextScore(member), true)
-                        .addField("Voicecore",  voiceScoreOld + " + " + addVoiceScore + " = " + Data.getVoiceScore(member), true)
+                        .addField("Messages",  textScoreOld + " + " + addTextScore + " = " + Data.getTextMessages(member), false)
+                        .addField("Seconds in Voicechat",  voiceScoreOld + " + " + addVoiceScore + " = " + Data.getVoiceSeconds(member), false)
                         .build()).setEphemeral(true).queue();
                 return;
             }
