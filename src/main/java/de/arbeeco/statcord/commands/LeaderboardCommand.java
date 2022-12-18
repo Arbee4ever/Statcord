@@ -25,11 +25,8 @@ public class LeaderboardCommand {
                 .setTitle("View full Leaderboard!", "https://statcord.arbeeco.de/leaderboards/" + event.getGuild().getId());
         String description = "";
         int count = 0;
-        FindIterable<Document> data = collection.find().sort(Sorts.descending("textmessages", "voiceseconds", "id")).limit(10);
-        List<Document> dataList = new ArrayList<>();
-        data.into(dataList);
-        dataList.sort(Comparator.comparingInt(el -> el.getInteger("textmessages") - el.getInteger("voiceseconds")));
-        for (Document memberData : dataList) {
+        FindIterable<Document> data = collection.find().sort(Sorts.descending("voicescore", "textscore", "id")).limit(10);
+        for (Document memberData : data) {
             count++;
             Member  member = guild.getMemberById(memberData.get("id").toString());
             int txtscore = Data.getTextScore(member);

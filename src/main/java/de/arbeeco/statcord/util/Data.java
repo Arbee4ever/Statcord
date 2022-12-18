@@ -140,17 +140,17 @@ public class Data {
         Date now = Date.from(Instant.now());
         if ((lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown")) {
             updateLastMsg(member);
-            setMemberValue(member, "textmessages", getTextMessages(member) + x);
+            setMemberValue(member, "textscore", getTextMessages(member) + x);
             appendTextHistory(member, false, x);
         }
     }
 
     public static int getTextScore(Member member) {
-        return (int) getMemberValue(member, "textmessages") / (int) Config.getConfigValue(member.getGuild(), "values", "msgsperpoint");
+        return (int) getMemberValue(member, "textscore") / (int) Config.getConfigValue(member.getGuild(), "values", "msgsperpoint");
     }
 
     public static int getTextMessages(Member member) {
-        return (int) getMemberValue(member, "textmessages");
+        return (int) getMemberValue(member, "textscore");
     }
 
     public static Date getLastMsg(Member member) {
@@ -212,15 +212,15 @@ public class Data {
     }
 
     public static void addVoiceSeconds(Member member, int x) {
-        setMemberValue(member, "voiceseconds", getVoiceSeconds(member) + x);
+        setMemberValue(member, "voicescore", getVoiceSeconds(member) + x);
     }
 
     public static int getVoiceScore(Member member) {
-        return (int) getMemberValue(member, "voiceseconds") / (int) Config.getConfigValue(member.getGuild(), "values", "vcsecondsperpoint");
+        return (int) getMemberValue(member, "voicescore") / (int) Config.getConfigValue(member.getGuild(), "values", "vcsecondsperpoint");
     }
 
     public static int getVoiceSeconds(Member member) {
-        return (int) getMemberValue(member, "voiceseconds");
+        return (int) getMemberValue(member, "voicescore");
     }
 
     public static List<Number> getVoiceHistory(Member member, boolean unprocessed) {

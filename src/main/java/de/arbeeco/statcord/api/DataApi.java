@@ -111,11 +111,8 @@ public class DataApi {
             int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(0);
             int limit = 100;
             int count = 0;
-            FindIterable<Document> data = collection.find().sort(descending("textmessages", "voiceseconds", "id")).skip(page * limit).limit(limit);
-            List<Document> dataList = new ArrayList<>();
-            data.into(dataList);
-            dataList.sort(Comparator.comparingInt(el -> el.getInteger("textmessages") - el.getInteger("voiceseconds")));
-            for (Document memberData : dataList) {
+            FindIterable<Document> data = collection.find().sort(descending("voicescore", "textscore", "id")).skip(page * limit).limit(limit);
+            for (Document memberData : data) {
                 Member member = guild.getMemberById(memberData.getString("id"));
                 if (member == null && (boolean) Config.getConfigValue(guild, "data", "deleteonleave")) {
                     Data.deleteMemberData(guild, (String) memberData.get("id"));
@@ -128,10 +125,10 @@ public class DataApi {
                 jsonObject.addProperty("name", member.getEffectiveName() + "#" + member.getUser().getDiscriminator());
                 jsonObject.addProperty("pos", count + (page * limit));
                 jsonObject.addProperty("avatar", member.getUser().getAvatarUrl());
-                int msgs = jsonObject.remove("textmessages").getAsInt();
-                int vcseconds = jsonObject.remove("voiceseconds").getAsInt();
-                jsonObject.addProperty("textmessages", msgs);
-                jsonObject.addProperty("voiceseconds", vcseconds);
+                int msgs = jsonObject.remove("textscore").getAsInt();
+                int vcseconds = jsonObject.remove("voicescore").getAsInt();
+                jsonObject.addProperty("textscore", msgs);
+                jsonObject.addProperty("voicescore", vcseconds);
                 jsonArray.add(jsonObject);
             }
             respObject.add("members", jsonArray);
