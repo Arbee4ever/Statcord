@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.events.session.SessionDisconnectEvent;
@@ -28,7 +27,7 @@ public class ConnectionEvents extends ListenerAdapter {
                 List<Member> members = voiceChannel.getMembers();
                 for (Member member : members) {
                     if (member.getUser().isBot()) return;
-                    Data.setVcStart(member);
+                    Data.setVcStart(guild, member);
                 }
             }
         }
