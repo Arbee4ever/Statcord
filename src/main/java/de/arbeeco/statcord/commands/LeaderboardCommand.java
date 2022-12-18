@@ -1,6 +1,8 @@
 package de.arbeeco.statcord.commands;
 
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Sorts;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -19,7 +21,8 @@ public class LeaderboardCommand {
                 .setTitle("View full Leaderboard!", "https://statcord.arbeeco.de/leaderboards/" + event.getGuild().getId());
         String description = "";
         int count = 0;
-        for (Document memberData : collection.find().sort(descending("textmessages", "voiceseconds")).limit(10)) {
+        FindIterable<Document> data = collection.find().sort(Sorts.descending("voicescore", "textscore", "id")).limit(10);
+        for (Document memberData : data) {
             count++;
             Member  member = guild.getMemberById(memberData.get("id").toString());
             int txtscore = Data.getTextScore(member);
