@@ -138,7 +138,7 @@ public class Data {
     public static void addTextScore(Member member, int x) {
         Date lastm = Data.getLastMsg(member);
         Date now = Date.from(Instant.now());
-        if ((lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown")) {
+        if (lastm == null || (lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown")) {
             updateLastMsg(member);
             setMemberValue(member, "textscore", getTextMessages(member) + x);
             appendTextHistory(member, false, x);
