@@ -30,11 +30,11 @@ public class LeaderboardCommand {
         AggregateIterable<Document> data = collection.aggregate(Arrays.asList(
                 new Document("$set",
                         new Document("_sum",
-                                new Document("$sum", Arrays.asList("$voiceseconds", "$textmessages"))
+                                new Document("$sum", Arrays.asList("$voicescore", "$textscore"))
                         )
                 ),
                 new Document("$sort",
-                        new Document("_sum", -1L).append("$id", -1L)
+                        new Document("_sum", -1L).append("id", -1L)
                 ),
                 new Document("$limit", 10L)));
         for (Document memberData : data) {
