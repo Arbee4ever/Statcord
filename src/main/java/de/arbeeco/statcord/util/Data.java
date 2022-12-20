@@ -184,7 +184,7 @@ public class Data {
     public static void addTextMessages(Member member, int x, boolean cooldown) {
         Date lastm = Data.getLastMsg(member);
         Date now = Date.from(Instant.now());
-        if ((lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown") || !cooldown || lastm == null) {
+        if (!cooldown || lastm == null || (lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown")) {
             if (cooldown) {
                 updateLastMsg(member);
             }
