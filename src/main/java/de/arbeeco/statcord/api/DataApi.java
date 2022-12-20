@@ -4,9 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Accumulators;
+import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Sorts;
+import com.mongodb.internal.operation.AggregateOperation;
+import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
 import io.javalin.http.BadRequestResponse;
@@ -19,10 +24,7 @@ import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static com.mongodb.client.model.Sorts.descending;
 
@@ -113,7 +115,17 @@ public class DataApi {
             int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(0);
             int limit = 100;
             int count = 0;
-            FindIterable<Document> data = collection.find().sort(Sorts.descending("voicescore", "textscore", "id")).skip(page * limit).limit(limit);
+            AggregateIterable<Document> data = collection.aggregate(Arrays.asList(
+                    new Document("$set",
+                            new Document("_sum",
+                                    new Document("$sum", Arrays.asList("$voiceseconds", "$textmessages"))
+                            )
+                    ),
+                    new Document("$sort",
+                            new Document("_sum", -1L).append("$id", -1L)
+                    ),
+                    new Document("$skip", page * limit),
+                    new Document("$limit", limit)));
             for (Document memberData : data) {
                 Member member = guild.getMemberById(memberData.getString("id"));
                 if (member == null && (boolean) Config.getConfigValue(guild, "data", "deleteonleave")) {
@@ -123,6 +135,7 @@ public class DataApi {
                 count++;
                 JsonObject jsonObject = new Gson().fromJson(memberData.toJson(), JsonObject.class);
                 jsonObject.remove("_id");
+                jsonObject.remove("_sum");
                 JsonElement name = jsonObject.remove("name");
                 jsonObject.addProperty("name", member.getEffectiveName() + "#" + member.getUser().getDiscriminator());
                 jsonObject.addProperty("pos", count + (page * limit));
