@@ -1,10 +1,12 @@
 package de.arbeeco.statcord.commands;
 
+import com.google.gson.JsonElement;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
 import java.awt.*;
 
@@ -17,11 +19,11 @@ public class AddCommand {
                 int voiceScoreOld = Data.getVoiceSeconds(member);
                 int addTextScore = 0;
                 int addVoiceScore = 0;
-                if (event.getOption("textscore") != null) {
-                    addTextScore = event.getOption("textscore").getAsInt();
+                if (event.getOption("textmessages") != null) {
+                    addTextScore = event.getOption("textmessages").getAsInt();
                 }
-                if (event.getOption("voicescore") != null) {
-                    addVoiceScore = event.getOption("voicescore").getAsInt();
+                if (event.getOption("voiceseconds") != null) {
+                    addVoiceScore = event.getOption("voiceseconds").getAsInt();
                 }
                 Data.addTextMessages(member, addTextScore, false);
                 Data.addVoiceSeconds(member, addVoiceScore);

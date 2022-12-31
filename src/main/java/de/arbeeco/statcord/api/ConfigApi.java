@@ -44,7 +44,8 @@ public class ConfigApi {
     public void getGuildConfigCategory(Context ctx) {
         Guild guild = jda.getGuildById(ctx.pathParamAsClass("guildId", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid Guild-ID")));
         Map data = Config.getConfigCategory(guild, ctx.pathParam("category"));
-        ctx.json(String.valueOf(data));
+        String respObj = new Gson().toJson(String.valueOf(data));
+        ctx.json(respObj);
         ctx.status(200);
     }
 

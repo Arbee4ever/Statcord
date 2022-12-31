@@ -140,37 +140,31 @@ public class Data {
     private static void updateRoles(Member member, int value, String modified) {
         Object configValue = Config.getConfigValue(member.getGuild(), "roles", "roles");
         if (configValue == null) return;
-        JsonArray roles = new Gson().toJsonTree(configValue).getAsJsonArray();
-        if (roles.equals(JsonNull.INSTANCE)) return;
+        JsonArray ranks = new Gson().toJsonTree(configValue).getAsJsonArray();
+        if (ranks.equals(JsonNull.INSTANCE)) return;
 
         List<Role> addRoles = new ArrayList<>();
         List<Role> removeRoles = new ArrayList<>();
 
-        for (JsonElement possibleRank : roles) {
-            if (!possibleRank.getAsJsonObject().get("requirements").getAsJsonObject().has(modified)) continue;
-            if (possibleRank.getAsJsonObject().get("requirements").getAsJsonObject().get(modified).getAsInt() <= value) {
-                boolean requirementsMet = true;
-                if (possibleRank.getAsJsonObject().get("requirements").getAsJsonObject().size() > 1) {
-                    for (Map.Entry<String, JsonElement> req : possibleRank.getAsJsonObject().get("requirements").getAsJsonObject().entrySet()) {
-                        Object value2 = getMemberValue(member, req.getKey());
-                        if (value2 == null) {
-                            requirementsMet = false;
-                            continue;
-                        }
-                        if (!(req.getValue().getAsInt() <= (int) value2)) requirementsMet = false;
-                    }
+        for (JsonElement possibleRank : ranks) {
+            boolean requirementsMet = true;
+            for (JsonElement req : possibleRank.getAsJsonObject().get("requirements").getAsJsonArray()) {
+                if (!(req.getAsJsonObject().get("value").getAsInt() <= (int)getMemberValue(member, req.getAsJsonObject().get("id").getAsString()))) {
+                    requirementsMet = false;
+                    break;
                 }
-                if (!requirementsMet) continue;
-                for (Map.Entry<String, JsonElement> rank : possibleRank.getAsJsonObject().get("roles").getAsJsonObject().entrySet()) {
-                    Role role = member.getGuild().getRoleById(rank.getKey());
+            }
+            if (requirementsMet) {
+                for (JsonElement rank : possibleRank.getAsJsonObject().get("roles").getAsJsonArray()) {
+                    Role role = member.getGuild().getRoleById(rank.getAsJsonObject().get("id").getAsString());
                     if (role == null) continue;
                     addRoles.add(role);
                 }
             } else {
-                for (Map.Entry<String, JsonElement> rank : possibleRank.getAsJsonObject().get("roles").getAsJsonObject().entrySet()) {
-                    Role role = member.getGuild().getRoleById(rank.getKey());
+                for (JsonElement rank : possibleRank.getAsJsonObject().get("roles").getAsJsonArray()) {
+                    if (rank.getAsJsonObject().get("static").getAsBoolean()) continue;
+                    Role role = member.getGuild().getRoleById(rank.getAsJsonObject().get("id").getAsString());
                     if (role == null) continue;
-                    if (rank.getValue().getAsJsonObject().get("static").getAsBoolean()) continue;
                     removeRoles.add(role);
                 }
             }
@@ -182,9 +176,10 @@ public class Data {
 
     //region Text-Interactors
     public static void addTextMessages(Member member, int x, boolean cooldown) {
+        syncHistoryDays(member);
         Date lastm = Data.getLastMsg(member);
         Date now = Date.from(Instant.now());
-        if (!cooldown || lastm == null || (lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown")) {
+        if (lastm == null || !cooldown || (lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown")) {
             if (cooldown) {
                 updateLastMsg(member);
             }
@@ -249,9 +244,9 @@ public class Data {
     }
 
     public static void awardVcPoints(Guild guild, Member member) {
+        syncHistoryDays(member);
         MongoCollection<Document> collection = Data.getGuildData(guild);
         Date lastjoin = collection.find(eq("id", member.getId())).first().getDate("voicestart");
-        setMemberValue(member, "voicestart", null);
         Date now = new Time(System.currentTimeMillis());
         long diff = (now.getTime() - lastjoin.getTime()) / 1000;
         Calendar zero = new GregorianCalendar();
@@ -264,6 +259,7 @@ public class Data {
         }
         appendVoiceHistory(member, false, (int) diff);
         addVoiceSeconds(member, (int) diff);
+        setMemberValue(member, "voicestart", null);
     }
 
     public static void addVoiceSeconds(Member member, int x) {
