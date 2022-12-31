@@ -31,7 +31,7 @@ public class LeaderboardCommand {
                         )
                 ),
                 new Document("$sort",
-                        new Document("_sum", -1L).append("$id", -1L)
+                        new Document("_sum", -1L).append("id", -1L)
                 ),
                 new Document("$limit", 10L)));
         for (Document memberData : data) {

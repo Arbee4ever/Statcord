@@ -58,7 +58,7 @@ public class CommandEvents extends ListenerAdapter {
                 Commands.slash("add", "Adds to a Users Score")
                         .addOptions(
                                 new OptionData(OptionType.USER, "user", "User to add score to", true),
-                                new OptionData(OptionType.INTEGER, "textscore", "Textscore to add"),
+                                new OptionData(OptionType.INTEGER, "textmessages", "Textmessages to add"),
                                 new OptionData(OptionType.INTEGER, "voiceseconds", "Amount of Seconds to add")),
                 Commands.slash("ping", "Retrieve the Bots ping")
         ).queue();

@@ -122,7 +122,7 @@ public class DataApi {
                             )
                     ),
                     new Document("$sort",
-                            new Document("_sum", -1L).append("$id", -1L)
+                            new Document("_sum", -1L).append("id", -1L)
                     ),
                     new Document("$skip", page * limit),
                     new Document("$limit", limit)));
