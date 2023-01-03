@@ -1,6 +1,7 @@
 package de.arbeeco.statcord.events;
 
 import com.mongodb.client.MongoCollection;
+import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
 import de.arbeeco.statcord.util.UserDoc;
@@ -25,6 +26,7 @@ public class MessageSentEvent extends ListenerAdapter {
         MongoCollection collection = Data.getGuildData(member.getGuild());
         if (collection.find(eq("id", member.getId())).first() == null) {
             collection.insertOne(new UserDoc(member));
+            StatcordBot.logger.error(String.valueOf(collection.find(eq("id", member.getId())).first()));
         }
         if (event.getMessage().getMentions().isMentioned(event.getGuild().getSelfMember())) {
             event.getMessage().replyEmbeds(new StatcordEmbed()
@@ -52,7 +54,7 @@ public class MessageSentEvent extends ListenerAdapter {
         zero.set(Calendar.MINUTE, 0);
         zero.set(Calendar.SECOND, 0);
         zero.set(Calendar.MILLISECOND, 0);
-        if (lastm.before(zero.getTime())) {
+        if (lastm != null && lastm.before(zero.getTime())) {
             Date now = new Date();
             long diff = now.getTime() - lastm.getTime();
             for (int i = 0; i < TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS); i++) {
