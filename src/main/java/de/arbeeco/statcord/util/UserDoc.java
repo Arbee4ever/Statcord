@@ -14,7 +14,6 @@ public class UserDoc extends Document {
                 .append("textmessages", 0)
                 .append("texthistory", List.of(0))
                 .append("voiceseconds", 0)
-                .append("voicehistory", List.of(0))
-                .append("lastmsg", new Timestamp(System.currentTimeMillis()));
+                .append("voicehistory", List.of(0));
     }
 }
