@@ -12,15 +12,12 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 
-import static com.mongodb.client.model.Filters.eq;
-
 public class GuildMemberEvents extends ListenerAdapter {
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
-        Member member = event.getMember();
-        MongoCollection<Document> collection = Data.getGuildData(member.getGuild());
-        if (!member.getUser().isBot()) {
-            collection.insertOne(new UserDoc(member));
+        MongoCollection<Document> collection = Data.getGuildData(event.getGuild());
+        if (!event.getUser().isBot()) {
+            collection.insertOne(new UserDoc(event.getUser()));
         }
     }
 

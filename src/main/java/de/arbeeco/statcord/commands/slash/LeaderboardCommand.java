@@ -1,20 +1,17 @@
-package de.arbeeco.statcord.commands;
+package de.arbeeco.statcord.commands.slash;
 
 import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Sorts;
+import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.bson.Document;
 
 import java.util.Arrays;
-
-import static com.mongodb.client.model.Indexes.descending;
 
 public class LeaderboardCommand {
     public LeaderboardCommand(SlashCommandInteractionEvent event) {
@@ -36,10 +33,10 @@ public class LeaderboardCommand {
                 new Document("$limit", 10L)));
         for (Document memberData : data) {
             count++;
-            Member member = guild.getMemberById(memberData.get("id").toString());
-            int txtscore = Data.getTextScore(member);
-            int vcscore = Data.getVoiceScore(member);
-            int vcseconds = Data.getVoiceSeconds(member);
+            User user = StatcordBot.shardManager.getUserById(memberData.get("id").toString());
+            int txtscore = Data.getTextScore(user, guild);
+            int vcscore = Data.getVoiceScore(user, guild);
+            int vcseconds = Data.getVoiceSeconds(user, guild);
             String hours = "";
             String minutes = "0m";
             String seconds = "";
