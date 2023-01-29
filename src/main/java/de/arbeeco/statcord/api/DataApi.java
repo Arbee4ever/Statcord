@@ -37,7 +37,7 @@ public class DataApi {
         if (userId.size() != 0) {
             User user = null;
             if (!Objects.equals(userId.get(0), "")) {
-                user = jda.getUserById(userId.get(0));
+                user = jda.retrieveUserById(userId.get(0)).complete();
             }
             if (user != null) {
                 List<Guild> mutGuilds = new ArrayList<>(jda.getMutualGuilds(user));
@@ -74,7 +74,7 @@ public class DataApi {
             ctx.status(404).result("Guild not found");
         } else {
             if (ctx.queryParams("user").size() != 0) {
-                User user = jda.getUserById(ctx.queryParamAsClass("user", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid User-ID")));
+                User user = jda.retrieveUserById(ctx.queryParamAsClass("user", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid User-ID"))).complete();
                 if (user == null) {
                     ctx.status(404).result("User not found");
                     return;
@@ -121,7 +121,7 @@ public class DataApi {
                     new Document("$skip", page * limit),
                     new Document("$limit", limit)));
             for (Document memberData : data) {
-                User user = StatcordBot.shardManager.getUserById(memberData.getString("id"));
+                User user = StatcordBot.shardManager.retrieveUserById(memberData.getString("id")).complete();
                 Member member = guild.getMemberById(memberData.getString("id"));
                 if (member == null && (boolean) Config.getConfigValue(guild, "data", "deleteonleave")) {
                     Data.deleteMemberData(guild, (String) memberData.get("id"));
