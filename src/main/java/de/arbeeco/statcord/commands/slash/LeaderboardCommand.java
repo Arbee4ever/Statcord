@@ -52,7 +52,7 @@ public class LeaderboardCommand {
             }
 
             timeString = String.join("", hours, minutes, seconds);
-            description = description + count + ". " + guild.getMemberById(memberData.get("id").toString()).getAsMention() + ": **" + (txtscore + vcscore) + "** (**" + txtscore + "** text, **" + timeString + "** VC).\n";
+            description = description + count + ". " + StatcordBot.shardManager.retrieveUserById(memberData.get("id").toString()).complete().getAsMention() + ": **" + (txtscore + vcscore) + "** (**" + txtscore + "** text, **" + timeString + "** VC).\n";
         }
         embed.setDescription(description);
         event.replyEmbeds(embed.build()).queue();
