@@ -28,6 +28,8 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 public class StatcordBot {
     public static ShardManager shardManager;
     public static Logger logger = LoggerFactory.getLogger(StatcordBot.class);
@@ -39,6 +41,7 @@ public class StatcordBot {
     static MongoClient mongoClient;
     public static MongoDatabase guildsDB;
     public static MongoDatabase configsDB;
+
     //endregion
     public StatcordBot(String[] args) {
         DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(args[0])
@@ -68,7 +71,7 @@ public class StatcordBot {
 
         //region Commands
         new Thread(() -> {
-            String line = "";
+            String line;
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             try {
                 while ((line = reader.readLine()) != null) {
@@ -112,6 +115,9 @@ public class StatcordBot {
         connectionString = new ConnectionString(config.get("connection_string").getAsString());
         settings = MongoClientSettings.builder()
                 .applyConnectionString(connectionString)
+                .applyToSocketSettings(builder ->
+                        builder.connectTimeout(10, SECONDS)
+                                .readTimeout(15, SECONDS))
                 .serverApi(ServerApi.builder()
                         .version(ServerApiVersion.V1)
                         .build())

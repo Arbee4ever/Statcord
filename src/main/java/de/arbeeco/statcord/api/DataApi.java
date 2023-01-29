@@ -2,15 +2,9 @@ package de.arbeeco.statcord.api;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Accumulators;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Sorts;
-import com.mongodb.internal.operation.AggregateOperation;
 import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
@@ -22,11 +16,11 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 
-import java.util.*;
-
-import static com.mongodb.client.model.Sorts.descending;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 public class DataApi {
     private final JDA jda;
@@ -127,6 +121,7 @@ public class DataApi {
                     new Document("$skip", page * limit),
                     new Document("$limit", limit)));
             for (Document memberData : data) {
+                User user = StatcordBot.shardManager.getUserById(memberData.getString("id"));
                 Member member = guild.getMemberById(memberData.getString("id"));
                 if (member == null && (boolean) Config.getConfigValue(guild, "data", "deleteonleave")) {
                     Data.deleteMemberData(guild, (String) memberData.get("id"));
@@ -136,10 +131,15 @@ public class DataApi {
                 JsonObject jsonObject = new Gson().fromJson(memberData.toJson(), JsonObject.class);
                 jsonObject.remove("_id");
                 jsonObject.remove("_sum");
-                JsonElement name = jsonObject.remove("name");
-                jsonObject.addProperty("name", member.getEffectiveName() + "#" + member.getUser().getDiscriminator());
+                jsonObject.remove("name");
+                if (member != null) {
+                    jsonObject.addProperty("name", member.getEffectiveName() + "#" + member.getUser().getDiscriminator());
+                    jsonObject.addProperty("avatar", member.getEffectiveAvatarUrl());
+                } else if (user != null) {
+                    jsonObject.addProperty("name", user.getName() + "#" + user.getDiscriminator());
+                    jsonObject.addProperty("avatar", user.getAvatarUrl());
+                }
                 jsonObject.addProperty("pos", count + (page * limit));
-                jsonObject.addProperty("avatar", member.getUser().getAvatarUrl());
                 int msgs = jsonObject.remove("textmessages").getAsInt();
                 int vcseconds = jsonObject.remove("voiceseconds").getAsInt();
                 jsonObject.addProperty("textmessages", msgs);

@@ -8,9 +8,11 @@ import de.arbeeco.statcord.StatcordBot;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYSeries;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,17 +46,21 @@ public class Data {
     //endregion
 
     //region MemberConfig
-    public static Object getMemberValue(Member member, String valueName) {
-        MongoCollection<Document> collection = guildsDB.getCollection(member.getGuild().getId());
-        return collection.find(eq("id", member.getId())).first().get(valueName);
+    public static Object getMemberValue(User user, Guild guild, String valueName) {
+        MongoCollection<Document> collection = guildsDB.getCollection(guild.getId());
+        Document memberDoc = collection.find(eq("id", user.getId())).first();
+        if (memberDoc == null) {
+            return null;
+        }
+        return memberDoc.get(valueName);
     }
 
-    public static UpdateResult setMemberValue(Member member, String valueName, Object newValue) {
-        MongoCollection<Document> collection = guildsDB.getCollection(member.getGuild().getId());
+    public static UpdateResult setMemberValue(User user, Guild guild, String valueName, Object newValue) {
+        MongoCollection<Document> collection = guildsDB.getCollection(guild.getId());
         if (newValue == null) {
-            return collection.updateOne(eq("id", member.getId()), Updates.unset(valueName));
+            return collection.updateOne(eq("id", user.getId()), Updates.unset(valueName));
         }
-        return collection.updateOne(eq("id", member.getId()), Updates.set(valueName, newValue));
+        return collection.updateOne(eq("id", user.getId()), Updates.set(valueName, newValue));
     }
 
     public static boolean deleteMemberData(Guild guild, String id) {
@@ -65,81 +71,118 @@ public class Data {
     //endregion
 
     //region Misc
-    public static File genGraph(List<Member> user, int days, String filter) throws IOException {
+    public static File genGraph(List<User> userList, Guild guild, int days, String filter) throws IOException {
         File img = new File("graph.png");
         XYChart chart = new XYChart(1000, 600);
         chart.setTitle("Score over Time");
         chart.setYAxisTitle("Score");
         chart.setXAxisTitle("Time (in days)");
-        for (Member member : user) {
-            if (member.getUser().isBot()) continue;
-            Date lastm = getLastMsg(member);
-            Calendar zero = new GregorianCalendar();
-            zero.set(Calendar.HOUR_OF_DAY, 0);
-            zero.set(Calendar.MINUTE, 0);
-            zero.set(Calendar.SECOND, 0);
-            zero.set(Calendar.MILLISECOND, 0);
-            if (lastm.before(zero.getTime())) {
-                Date now = new Date();
-                long diff = now.getTime() - lastm.getTime();
-                appendTextHistory(member, true, 0);
-                appendVoiceHistory(member, true, 0);
-                for (int i = 0; i < TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS); i++) {
-                    appendTextHistory(member, true, 0);
-                    appendVoiceHistory(member, true, 0);
-                }
-            }
-            syncHistoryDays(member);
-            List<Number> textList = getTextHistory(member, false);
-            List<Number> voiceList = getVoiceHistory(member, false);
-            List<Number> yList = new ArrayList<>(List.of());
-            List<Number> xList = new ArrayList<>(List.of());
+        for (User user : userList) {
+            List<Number> list = new ArrayList<>(List.of());
             for (int i = 0; i < days; i++) {
-                xList.add(-i);
+                list.add(-i);
             }
-            switch (filter) {
-                case "text" -> {
-                    for (int i = 0; i < textList.size(); i++) {
-                        yList.add(0, textList.get(i).intValue());
-                    }
-                }
-                case "voice" -> {
-                    for (int i = 0; i < voiceList.size(); i++) {
-                        yList.add(0, voiceList.get(i).intValue());
-                    }
-                }
-                default -> {
-                    for (int i = 0; i < textList.size(); i++) {
-                        yList.add(0, textList.get(i).intValue() + voiceList.get(i).intValue());
-                    }
-                }
-            }
-            List<Number> ySubList = yList.subList(0, min(yList.size(), yList.size() - (yList.size() - days)));
-            List<Number> xSubList = xList.subList(0, ySubList.size());
-            chart.addSeries(member.getEffectiveName(), xSubList, ySubList);
+            List<Number> subList = list.subList(0, days);
+            chart.addSeries(user.getName(), subList, getYList(user, guild, days, filter));
         }
         BitmapEncoder.saveBitmap(chart, img.getPath(), BitmapEncoder.BitmapFormat.PNG);
         return img;
     }
 
-    public static void syncHistoryDays(Member member) {
-        List<Number> textList = getTextHistory(member, false);
-        List<Number> voiceList = getVoiceHistory(member, false);
+    public static File genGraph(List<Member> memberList, int days, String filter) throws IOException {
+        File img = new File("graph.png");
+        XYChart chart = new XYChart(1000, 600);
+        chart.setTitle("Score over Time");
+        chart.setYAxisTitle("Score");
+        chart.setXAxisTitle("Time (in days)");
+        for (Member member : memberList) {
+            List<Number> list = new ArrayList<>(List.of());
+            for (int i = 0; i < days; i++) {
+                list.add(-i);
+            }
+            List<Number> subList = list.subList(0, days);
+            chart.addSeries(member.getEffectiveName(), subList, getYList(member.getUser(), member.getGuild(), days, filter));
+        }
+        BitmapEncoder.saveBitmap(chart, img.getPath(), BitmapEncoder.BitmapFormat.PNG);
+        return img;
+    }
+
+    public static List<Number> getYList(User user, Guild guild, int days, String filter) {
+        if (user.isBot()) return null;
+        syncHistoryDays(user, guild);
+        List<Number> list = new ArrayList<>(List.of());
+        switch (filter) {
+            case "text" -> {
+                List<Number> textList = getTextHistory(user, guild, false);
+                for (int i = 0; i < textList.size(); i++) {
+                    list.add(0, textList.get(i).intValue());
+                }
+            }
+            case "voice" -> {
+                List<Number> voiceList = getVoiceHistory(user, guild, false);
+                for (int i = 0; i < voiceList.size(); i++) {
+                    list.add(0, voiceList.get(i).intValue());
+                }
+            }
+            default -> {
+                List<Number> textList = getTextHistory(user, guild, false);
+                List<Number> voiceList = getVoiceHistory(user, guild, false);
+                for (int i = 0; i < textList.size(); i++) {
+                    list.add(0, textList.get(i).intValue() + voiceList.get(i).intValue());
+                }
+            }
+        }
+        List<Number> subList = list.subList(0, min(list.size(), list.size() - (list.size() - days)));
+        return subList;
+    }
+
+    public static void syncHistoryDays(User user, Guild guild) {
+        Date lastm = getLastMsg(user, guild);
+        Date lastjoin = getVoiceStart(user, guild);
+        Calendar zero = new GregorianCalendar();
+        zero.set(Calendar.HOUR_OF_DAY, 0);
+        zero.set(Calendar.MINUTE, 0);
+        zero.set(Calendar.SECOND, 0);
+        zero.set(Calendar.MILLISECOND, 0);
+        if (lastm == null || lastm.before(zero.getTime())) {
+            Date now = new Date();
+            if (lastm != null) {
+                setLastMsg(user, guild);
+                long diff = now.getTime() - lastm.getTime();
+                appendTextHistory(user, guild, true, 0);
+                for (int i = 0; i < TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS); i++) {
+                    appendTextHistory(user, guild, true, 0);
+                }
+            }
+        }
+        if (lastjoin == null || lastjoin.before(zero.getTime())) {
+            Date now = new Date();
+            if (lastjoin != null) {
+                setVcStart(user, guild);
+                long diff = now.getTime() - lastjoin.getTime();
+                appendVoiceHistory(user, guild, true, 0);
+                for (int i = 0; i < TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS); i++) {
+                    appendVoiceHistory(user, guild, true, 0);
+                }
+            }
+        }
+        List<Number> textList = getTextHistory(user, guild, false);
+        List<Number> voiceList = getVoiceHistory(user, guild, false);
         if (textList.size() != voiceList.size()) {
             if (textList.size() > voiceList.size()) {
                 for (int j = 0; j < (textList.size() - voiceList.size()); j++) {
-                    appendVoiceHistory(member, true, 0);
+                    appendVoiceHistory(user, guild, true, 0);
                 }
             } else {
                 for (int j = 0; j < (voiceList.size() - textList.size()); j++) {
-                    appendTextHistory(member, true, 0);
+                    appendTextHistory(user, guild, true, 0);
                 }
             }
         }
     }
 
-    private static void updateRoles(Member member, int value, String modified) {
-        Object configValue = Config.getConfigValue(member.getGuild(), "roles", "roles");
+    private static void updateRoles(User user, Guild guild, int value, String modified) {
+        Object configValue = Config.getConfigValue(guild, "roles", "roles");
         if (configValue == null) return;
         JsonArray ranks = new Gson().toJsonTree(configValue).getAsJsonArray();
         if (ranks.equals(JsonNull.INSTANCE)) return;
@@ -150,70 +193,77 @@ public class Data {
         for (JsonElement possibleRank : ranks) {
             boolean requirementsMet = true;
             for (JsonElement req : possibleRank.getAsJsonObject().get("requirements").getAsJsonArray()) {
-                if (!(req.getAsJsonObject().get("value").getAsInt() <= (int)getMemberValue(member, req.getAsJsonObject().get("id").getAsString()))) {
+                if (!(req.getAsJsonObject().get("value").getAsInt() <= (int) getMemberValue(user, guild, req.getAsJsonObject().get("id").getAsString()))) {
                     requirementsMet = false;
                     break;
                 }
             }
             if (requirementsMet) {
                 for (JsonElement rank : possibleRank.getAsJsonObject().get("roles").getAsJsonArray()) {
-                    Role role = member.getGuild().getRoleById(rank.getAsJsonObject().get("id").getAsString());
+                    Role role = guild.getRoleById(rank.getAsJsonObject().get("id").getAsString());
                     if (role == null) continue;
                     addRoles.add(role);
                 }
             } else {
                 for (JsonElement rank : possibleRank.getAsJsonObject().get("roles").getAsJsonArray()) {
                     if (rank.getAsJsonObject().get("static").getAsBoolean()) continue;
-                    Role role = member.getGuild().getRoleById(rank.getAsJsonObject().get("id").getAsString());
+                    Role role = guild.getRoleById(rank.getAsJsonObject().get("id").getAsString());
                     if (role == null) continue;
                     removeRoles.add(role);
                 }
             }
         }
 
-        member.getGuild().modifyMemberRoles(member, addRoles, removeRoles).queue();
+        Member member = guild.getMember(user);
+        if (member != null) {
+            guild.modifyMemberRoles(member, addRoles, removeRoles).queue();
+        }
     }
     //endregion
 
     //region Text-Interactors
-    public static void addTextMessages(Member member, int x, boolean cooldown) {
-        syncHistoryDays(member);
-        Date lastm = Data.getLastMsg(member);
+    public static void addTextMessages(User user, Guild guild, int x, boolean cooldown) {
+        MongoCollection<Document> collection = Data.getGuildData(guild);
+        if (collection.find(eq("id", user.getId())).first() == null) {
+            collection.insertOne(new UserDoc(user));
+        }
+        syncHistoryDays(user, guild);
+        Date lastm = Data.getLastMsg(user, guild);
         Date now = Date.from(Instant.now());
-        if (lastm == null || !cooldown || (lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(member.getGuild(), "values", "cooldown")) {
+        if (lastm == null || !cooldown || (lastm.getTime() - now.getTime()) < -(int) Config.getConfigValue(guild, "values", "cooldown")) {
             if (cooldown) {
-                updateLastMsg(member);
+                setLastMsg(user, guild);
             }
-            setMemberValue(member, "textmessages", getTextMessages(member) + x);
-            appendTextHistory(member, false, x);
+            setMemberValue(user, guild, "textmessages", getTextMessages(user, guild) + x);
+            appendTextHistory(user, guild, false, x);
         }
-        int textMessages = getTextMessages(member);
-        updateRoles(member, textMessages, "textmessages");
+        int textMessages = getTextMessages(user, guild);
+        updateRoles(user, guild, textMessages, "textmessages");
     }
 
-    public static int getTextScore(Member member) {
-        return (int) getMemberValue(member, "textmessages") / (int) Config.getConfigValue(member.getGuild(), "values", "msgsperpoint");
+    public static int getTextScore(User user, Guild guild) {
+        return (int) getMemberValue(user, guild, "textmessages") / (int) Config.getConfigValue(guild, "values", "msgsperpoint");
     }
 
-    public static int getTextMessages(Member member) {
-        return (int) getMemberValue(member, "textmessages");
+    public static int getTextMessages(User user, Guild guild) {
+        return (int) getMemberValue(user, guild, "textmessages");
     }
 
-    public static Date getLastMsg(Member member) {
-        Object lastm = getMemberValue(member, "lastmsg");
-        if (lastm == null) {
-            return null;
-        } else {
-            return (Date) lastm;
+    public static Date getLastMsg(User user, Guild guild) {
+        return (Date) getMemberValue(user, guild, "lastmsg");
+    }
+
+    public static void setLastMsg(User user, Guild guild) {
+        MongoCollection<Document> collection = Data.getGuildData(guild);
+        if (collection.find(eq("id", user.getId())).first() == null) {
+            collection.insertOne(new UserDoc(user));
         }
+        Timestamp nowTime = new Timestamp(System.currentTimeMillis());
+        setMemberValue(user, guild, "lastmsg", nowTime);
     }
 
-    public static void updateLastMsg(Member member) {
-        setMemberValue(member, "lastmsg", new Timestamp(System.currentTimeMillis()));
-    }
-
-    public static List<Number> getTextHistory(Member member, boolean unprocessed) {
-        List<Number> beforeList = (List<Number>) getMemberValue(member, "texthistory");
+    public static List<Number> getTextHistory(User user, Guild guild, boolean unprocessed) {
+        List<Number> beforeList = (List<Number>) getMemberValue(user, guild, "texthistory");
         if (unprocessed) {
             return beforeList;
         }
@@ -228,61 +278,75 @@ public class Data {
         return list;
     }
 
-    public static UpdateResult appendTextHistory(Member member, boolean newDay, int x) {
-        List<Number> data = new ArrayList<>(getTextHistory(member, true));
+    public static UpdateResult appendTextHistory(User user, Guild guild, boolean newDay, int x) {
+        List<Number> data = new ArrayList<>(getTextHistory(user, guild, true));
         if (newDay) {
             data.add(x);
         } else {
             data.set(data.size() - 1, (int) data.get(data.size() - 1) + x);
         }
-        return setMemberValue(member, "texthistory", data);
+        return setMemberValue(user, guild, "texthistory", data);
     }
     //endregion
 
     //region VC-Interactors
-    public static void setVcStart(Member member) {
-        setMemberValue(member, "voicestart", new Timestamp(System.currentTimeMillis()));
+    public static void setVcStart(User user, Guild guild) {
+        MongoCollection<Document> collection = Data.getGuildData(guild);
+        if (collection.find(eq("id", user.getId())).first() == null) {
+            collection.insertOne(new UserDoc(user));
+        }
+        Timestamp nowTime = new Timestamp(System.currentTimeMillis());
+        StatcordBot.logger.warn(setMemberValue(user, guild, "voicestart", nowTime).toString());
+        StatcordBot.logger.warn(nowTime.toString());
+        Date voicestart = (Date) getMemberValue(user, guild, "voicestart");
+        StatcordBot.logger.warn(voicestart.toString());
+        if ((nowTime.getTime() - voicestart.getTime()) >= 10000) {
+            StatcordBot.logger.error("Error: nowTime: " + nowTime + " voicestart: " + voicestart + " Name#discriminator: " + user.getName() + "#" + user.getDiscriminator());
+        }
     }
 
-    public static void awardVcPoints(Guild guild, Member member) {
-        syncHistoryDays(member);
-        MongoCollection<Document> collection = Data.getGuildData(guild);
-        Date lastjoin = collection.find(eq("id", member.getId())).first().getDate("voicestart");
+    public static void awardVcPoints(User user, Guild guild) {
+        syncHistoryDays(user, guild);
+        Date lastjoin = (Date) getMemberValue(user, guild, "voicestart");
         Date now = new Time(System.currentTimeMillis());
-        long diff = (now.getTime() - lastjoin.getTime()) / 1000;
         Calendar zero = new GregorianCalendar();
         zero.set(Calendar.HOUR_OF_DAY, 0);
         zero.set(Calendar.MINUTE, 0);
         zero.set(Calendar.SECOND, 0);
         zero.set(Calendar.MILLISECOND, 0);
-        if (lastjoin.before(zero.getTime())) {
-            appendVoiceHistory(member, true, (int) diff);
+        long diff = now.getTime() - lastjoin.getTime();
+        for (int i = 0; i < TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS); i++) {
+            appendVoiceHistory(user, guild, true, 0);
         }
-        appendVoiceHistory(member, false, (int) diff);
-        addVoiceSeconds(member, (int) diff);
-        setMemberValue(member, "voicestart", null);
+        appendVoiceHistory(user, guild, false, (int) diff / 1000);
+        addVoiceSeconds(user, guild, (int) diff / 1000);
+        //setMemberValue(member, "voicestart", null);
     }
 
-    public static void addVoiceSeconds(Member member, int x) {
-        setMemberValue(member, "voiceseconds", getVoiceSeconds(member) + x);
-        int voiceseconds = getVoiceSeconds(member);
-        updateRoles(member, voiceseconds, "voiceseconds");
+    public static void addVoiceSeconds(User user, Guild guild, int x) {
+        setMemberValue(user, guild, "voiceseconds", getVoiceSeconds(user, guild) + x);
+        int voiceseconds = getVoiceSeconds(user, guild);
+        updateRoles(user, guild, voiceseconds, "voiceseconds");
     }
 
-    public static int getVoiceScore(Member member) {
-        return (int) getMemberValue(member, "voiceseconds") / (int) Config.getConfigValue(member.getGuild(), "values", "vcsecondsperpoint");
+    public static int getVoiceScore(User user, Guild guild) {
+        return (int) getMemberValue(user, guild, "voiceseconds") / (int) Config.getConfigValue(guild, "values", "vcsecondsperpoint");
     }
 
-    public static int getVoiceSeconds(Member member) {
-        return (int) getMemberValue(member, "voiceseconds");
+    public static int getVoiceSeconds(User user, Guild guild) {
+        return (int) getMemberValue(user, guild, "voiceseconds");
     }
 
-    public static List<Number> getVoiceHistory(Member member, boolean unprocessed) {
-        List<Number> beforeList = (List<Number>) getMemberValue(member, "voicehistory");
+    public static Date getVoiceStart(User user, Guild guild) {
+        return (Date) getMemberValue(user, guild, "voicestart");
+    }
+
+    public static List<Number> getVoiceHistory(User user, Guild guild, boolean unprocessed) {
+        List<Number> beforeList = (List<Number>) getMemberValue(user, guild, "voicehistory");
         if (unprocessed) {
             return beforeList;
         }
-        List<Number> list = new ArrayList<>();
+        List<Number> list = new ArrayList<>(List.of());
         for (int i = 0; i < beforeList.size(); i++) {
             int j = 0;
             if (i != 0) {
@@ -293,14 +357,14 @@ public class Data {
         return list;
     }
 
-    public static UpdateResult appendVoiceHistory(Member member, boolean newDay, int x) {
-        List<Number> data = getVoiceHistory(member, true);
+    public static UpdateResult appendVoiceHistory(User user, Guild guild, boolean newDay, int x) {
+        List<Number> data = getVoiceHistory(user, guild, true);
         if (newDay) {
             data.add(x);
         } else {
             data.set(data.size() - 1, (int) data.get(data.size() - 1) + x);
         }
-        return setMemberValue(member, "voicehistory", data);
+        return setMemberValue(user, guild, "voicehistory", data);
     }
     //endregion
 }
