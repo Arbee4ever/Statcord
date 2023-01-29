@@ -33,7 +33,7 @@ public class LeaderboardCommand {
                 new Document("$limit", 10L)));
         for (Document memberData : data) {
             count++;
-            User user = StatcordBot.shardManager.getUserById(memberData.get("id").toString());
+            User user = StatcordBot.shardManager.retrieveUserById(memberData.get("id").toString()).complete();
             int txtscore = Data.getTextScore(user, guild);
             int vcscore = Data.getVoiceScore(user, guild);
             int vcseconds = Data.getVoiceSeconds(user, guild);

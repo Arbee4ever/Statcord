@@ -16,6 +16,7 @@ public class CommandEvents extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+        if (!event.isFromGuild()) return;
         switch (event.getName()) {
             case "score" -> new ScoreCommand(event);
             case "graph" -> new GraphCommand(event);
@@ -28,6 +29,7 @@ public class CommandEvents extends ListenerAdapter {
 
     @Override
     public void onUserContextInteraction(UserContextInteractionEvent event) {
+        if (!event.isFromGuild()) return;
         switch (event.getName()) {
             case "Get User Score" -> new ContextScoreCommand(event);
             case "Get User Graph" -> new ContextGraphCommand(event);
