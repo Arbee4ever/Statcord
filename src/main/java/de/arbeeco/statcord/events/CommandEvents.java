@@ -11,12 +11,14 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.MDC;
 
 public class CommandEvents extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) return;
+        MDC.put("guild.id", event.getGuild().getId());
         switch (event.getName()) {
             case "score" -> new ScoreCommand(event);
             case "graph" -> new GraphCommand(event);
@@ -30,6 +32,7 @@ public class CommandEvents extends ListenerAdapter {
     @Override
     public void onUserContextInteraction(UserContextInteractionEvent event) {
         if (!event.isFromGuild()) return;
+        MDC.put("guild.id", event.getGuild().getId());
         switch (event.getName()) {
             case "Get User Score" -> new ContextScoreCommand(event);
             case "Get User Graph" -> new ContextGraphCommand(event);

@@ -12,5 +12,9 @@
   {
     "id": "roles",
     "roles": []
+  },
+  {
+    "id": "errors",
+    "errors": []
   }
 ]
