@@ -18,7 +18,7 @@ public class LeaderboardCommand {
         Guild guild = event.getGuild();
         MongoCollection<Document> collection = Data.getGuildData(guild);
         EmbedBuilder embed = new StatcordEmbed()
-                .setTitle("View full Leaderboard!", "https://statcord.arbeeco.de/leaderboards/" + event.getGuild().getId());
+                .setTitle("View full Leaderboard!", "https://statcord.arbeeco.de/leaderboards/" + guild.getId());
         String description = "";
         int count = 0;
         AggregateIterable<Document> data = collection.aggregate(Arrays.asList(
