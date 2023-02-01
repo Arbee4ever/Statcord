@@ -78,12 +78,14 @@ public class Data {
         chart.setYAxisTitle("Score");
         chart.setXAxisTitle("Time (in days)");
         for (User user : userList) {
+            if (user.isBot()) continue;
             List<Number> list = new ArrayList<>(List.of());
             for (int i = 0; i < days; i++) {
                 list.add(-i);
             }
-            List<Number> subList = list.subList(0, days);
-            chart.addSeries(user.getName(), subList, getYList(user, guild, days, filter));
+            List<Number> yList = getYList(user, guild, days, filter);
+            List<Number> subList = list.subList(0, min(days, yList.size()));
+            chart.addSeries(user.getName(), subList, yList);
         }
         BitmapEncoder.saveBitmap(chart, img.getPath(), BitmapEncoder.BitmapFormat.PNG);
         return img;
@@ -96,12 +98,14 @@ public class Data {
         chart.setYAxisTitle("Score");
         chart.setXAxisTitle("Time (in days)");
         for (Member member : memberList) {
+            if (member.getUser().isBot()) continue;
             List<Number> list = new ArrayList<>(List.of());
             for (int i = 0; i < days; i++) {
                 list.add(-i);
             }
-            List<Number> subList = list.subList(0, days);
-            chart.addSeries(member.getEffectiveName(), subList, getYList(member.getUser(), member.getGuild(), days, filter));
+            List<Number> yList = getYList(member.getUser(), member.getGuild(), days, filter);
+            List<Number> subList = list.subList(0, min(days, yList.size()));
+            chart.addSeries(member.getEffectiveName(), subList, yList);
         }
         BitmapEncoder.saveBitmap(chart, img.getPath(), BitmapEncoder.BitmapFormat.PNG);
         return img;
