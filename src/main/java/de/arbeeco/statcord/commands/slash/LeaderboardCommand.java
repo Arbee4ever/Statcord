@@ -1,36 +1,30 @@
-package de.arbeeco.statcord.commands;
+package de.arbeeco.statcord.commands.slash;
 
 import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Sorts;
+import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.bson.Document;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-
-import static com.mongodb.client.model.Indexes.descending;
 
 public class LeaderboardCommand {
     public LeaderboardCommand(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
-        MongoCollection<Document> collection =Data.getGuildData(guild);
+        MongoCollection<Document> collection = Data.getGuildData(guild);
         EmbedBuilder embed = new StatcordEmbed()
-                .setTitle("View full Leaderboard!", "https://statcord.arbeeco.de/leaderboards/" + event.getGuild().getId());
+                .setTitle("View full Leaderboard!", "https://statcord.arbeeco.de/leaderboards/" + guild.getId());
         String description = "";
         int count = 0;
         AggregateIterable<Document> data = collection.aggregate(Arrays.asList(
                 new Document("$set",
                         new Document("_sum",
-                                new Document("$sum", Arrays.asList("$voicescore", "$textscore"))
+                                new Document("$sum", Arrays.asList("$voiceseconds", "$textmessages"))
                         )
                 ),
                 new Document("$sort",
@@ -39,15 +33,15 @@ public class LeaderboardCommand {
                 new Document("$limit", 10L)));
         for (Document memberData : data) {
             count++;
-            Member  member = guild.getMemberById(memberData.get("id").toString());
-            int txtscore = Data.getTextScore(member);
-            int vcscore = Data.getVoiceScore(member);
-            int vcseconds = Data.getVoiceSeconds(member);
+            User user = StatcordBot.shardManager.retrieveUserById(memberData.get("id").toString()).complete();
+            int txtscore = Data.getTextScore(user, guild);
+            int vcscore = Data.getVoiceScore(user, guild);
+            int vcseconds = Data.getVoiceSeconds(user, guild);
             String hours = "";
             String minutes = "0m";
             String seconds = "";
             String timeString;
-            if (vcseconds/3600 != 0) {
+            if (vcseconds / 3600 != 0) {
                 hours = vcseconds / 3600 + "h:";
             }
             if ((vcseconds % 3600) / 60 != 0) {
@@ -58,7 +52,7 @@ public class LeaderboardCommand {
             }
 
             timeString = String.join("", hours, minutes, seconds);
-            description = description + count + ". " + guild.getMemberById(memberData.get("id").toString()).getAsMention() + ": **" + (txtscore + vcscore) + "** (**" + txtscore + "** text, **" + timeString + "** VC).\n";
+            description = description + count + ". " + StatcordBot.shardManager.retrieveUserById(memberData.get("id").toString()).complete().getAsMention() + ": **" + (txtscore + vcscore) + "** (**" + txtscore + "** text, **" + timeString + "** VC).\n";
         }
         embed.setDescription(description);
         event.replyEmbeds(embed.build()).queue();

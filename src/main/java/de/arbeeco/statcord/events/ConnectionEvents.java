@@ -27,7 +27,7 @@ public class ConnectionEvents extends ListenerAdapter {
                 List<Member> members = voiceChannel.getMembers();
                 for (Member member : members) {
                     if (member.getUser().isBot()) return;
-                    Data.setVcStart(guild, member);
+                    Data.setVcStart(member.getUser(), guild);
                 }
             }
         }
@@ -51,7 +51,7 @@ public class ConnectionEvents extends ListenerAdapter {
                 List<Member> members = voiceChannel.getMembers();
                 for (Member member : members) {
                     if (member.getUser().isBot()) return;
-                    Data.awardVcPoints(guild, member);
+                    Data.awardVcPoints(member.getUser(), guild);
                 }
             }
         }

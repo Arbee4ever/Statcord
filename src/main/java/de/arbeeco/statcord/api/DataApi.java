@@ -2,11 +2,10 @@ package de.arbeeco.statcord.api;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
 import io.javalin.http.BadRequestResponse;
@@ -18,9 +17,10 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 
-import java.util.*;
-
-import static com.mongodb.client.model.Sorts.descending;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 public class DataApi {
     private final JDA jda;
@@ -37,7 +37,7 @@ public class DataApi {
         if (userId.size() != 0) {
             User user = null;
             if (!Objects.equals(userId.get(0), "")) {
-                user = jda.getUserById(userId.get(0));
+                user = jda.retrieveUserById(userId.get(0)).complete();
             }
             if (user != null) {
                 List<Guild> mutGuilds = new ArrayList<>(jda.getMutualGuilds(user));
@@ -74,7 +74,7 @@ public class DataApi {
             ctx.status(404).result("Guild not found");
         } else {
             if (ctx.queryParams("user").size() != 0) {
-                User user = jda.getUserById(ctx.queryParamAsClass("user", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid User-ID")));
+                User user = jda.retrieveUserById(ctx.queryParamAsClass("user", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid User-ID"))).complete();
                 if (user == null) {
                     ctx.status(404).result("User not found");
                     return;
@@ -112,7 +112,7 @@ public class DataApi {
             AggregateIterable<Document> data = collection.aggregate(Arrays.asList(
                     new Document("$set",
                             new Document("_sum",
-                                    new Document("$sum", Arrays.asList("$voicescore", "$textscore"))
+                                    new Document("$sum", Arrays.asList("$voiceseconds", "$textmessages"))
                             )
                     ),
                     new Document("$sort",
@@ -121,6 +121,7 @@ public class DataApi {
                     new Document("$skip", page * limit),
                     new Document("$limit", limit)));
             for (Document memberData : data) {
+                User user = StatcordBot.shardManager.retrieveUserById(memberData.getString("id")).complete();
                 Member member = guild.getMemberById(memberData.getString("id"));
                 if (member == null && (boolean) Config.getConfigValue(guild, "data", "deleteonleave")) {
                     Data.deleteMemberData(guild, (String) memberData.get("id"));
@@ -129,14 +130,20 @@ public class DataApi {
                 count++;
                 JsonObject jsonObject = new Gson().fromJson(memberData.toJson(), JsonObject.class);
                 jsonObject.remove("_id");
-                JsonElement name = jsonObject.remove("name");
-                jsonObject.addProperty("name", member.getEffectiveName() + "#" + member.getUser().getDiscriminator());
+                jsonObject.remove("_sum");
+                jsonObject.remove("name");
+                if (member != null) {
+                    jsonObject.addProperty("name", member.getEffectiveName() + "#" + member.getUser().getDiscriminator());
+                    jsonObject.addProperty("avatar", member.getEffectiveAvatarUrl());
+                } else if (user != null) {
+                    jsonObject.addProperty("name", user.getName() + "#" + user.getDiscriminator());
+                    jsonObject.addProperty("avatar", user.getAvatarUrl());
+                }
                 jsonObject.addProperty("pos", count + (page * limit));
-                jsonObject.addProperty("avatar", member.getUser().getAvatarUrl());
-                int msgs = jsonObject.remove("textscore").getAsInt();
-                int vcseconds = jsonObject.remove("voicescore").getAsInt();
-                jsonObject.addProperty("textscore", msgs);
-                jsonObject.addProperty("voicescore", vcseconds);
+                int msgs = jsonObject.remove("textmessages").getAsInt();
+                int vcseconds = jsonObject.remove("voiceseconds").getAsInt();
+                jsonObject.addProperty("textmessages", msgs);
+                jsonObject.addProperty("voiceseconds", vcseconds);
                 jsonArray.add(jsonObject);
             }
             respObject.add("members", jsonArray);

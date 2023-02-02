@@ -6,11 +6,9 @@ import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
 import de.arbeeco.statcord.StatcordBot;
 import io.javalin.http.NotFoundResponse;
-import jakarta.annotation.Nonnull;
 import net.dv8tion.jda.api.entities.Guild;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -41,6 +39,20 @@ public class Config {
         MongoCollection<Document> collection = StatcordBot.configsDB.getCollection(guild.getId());
         if (collection.countDocuments() == 0) {
             newGuildConfig(guild);
+        } else {
+            try {
+                JsonArray obj = (JsonArray) JsonParser.parseReader(new FileReader("configdoc.json"));
+                if (collection.countDocuments() - 1 != obj.size()) {
+                    for (JsonElement config : obj) {
+                        if (collection.find(eq("id", config.getAsJsonObject().get("id").getAsString())).first() == null) {
+                            Document document = Document.parse(config.toString());
+                            collection.insertOne(document);
+                        }
+                    }
+                }
+            } catch (FileNotFoundException e) {
+                StatcordBot.logger.error(e.toString());
+            }
         }
         return collection;
     }
@@ -48,13 +60,12 @@ public class Config {
     public static Map getConfigCategory(Guild guild, String categoryName) {
         Document document = getGuildConfig(guild).find(eq("id", categoryName)).first();
         if (document == null) {
-            throw new NotFoundResponse("Category not found");
+            throw new NotFoundResponse("Category \"" + categoryName + "\" not found");
         }
         Map<String, Object> map = new Gson().fromJson(document.toJson(), Map.class);
         return map;
     }
 
-    @NotNull
     public static Object getConfigValue(Guild guild, String configCategory, String valueName) {
         Object value = getConfigCategory(guild, configCategory).get(valueName);
         if (value == null) return null;
