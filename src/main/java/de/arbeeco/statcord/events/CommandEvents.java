@@ -1,40 +1,41 @@
 package de.arbeeco.statcord.events;
 
-import de.arbeeco.statcord.commands.*;
+import de.arbeeco.statcord.commands.context.ContextGraphCommand;
+import de.arbeeco.statcord.commands.context.ContextScoreCommand;
+import de.arbeeco.statcord.commands.slash.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.DiscordLocale;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.commands.localization.LocalizationFunction;
-import net.dv8tion.jda.api.interactions.commands.localization.ResourceBundleLocalizationFunction;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.MDC;
 
 public class CommandEvents extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+        if (!event.isFromGuild()) return;
+        MDC.put("guild.id", event.getGuild().getId());
         switch (event.getName()) {
-            case "score" -> {
-                new ScoreCommand(event);
-            }
-            case "graph" -> {
-                new GraphCommand(event);
-            }
-            case "leaderboard" -> {
-                new LeaderboardCommand(event);
-            }
-            case "resetdata" -> {
-                new ResetDataCommand(event);
-            }
-            case "add" -> {
-                new AddCommand(event);
-            }
-            case "ping" -> {
-                new PingCommand(event);
-            }
+            case "score" -> new ScoreCommand(event);
+            case "graph" -> new GraphCommand(event);
+            case "leaderboard" -> new LeaderboardCommand(event);
+            case "resetdata" -> new ResetDataCommand(event);
+            case "add" -> new AddCommand(event);
+            case "ping" -> new PingCommand(event);
+        }
+    }
+
+    @Override
+    public void onUserContextInteraction(UserContextInteractionEvent event) {
+        if (!event.isFromGuild()) return;
+        MDC.put("guild.id", event.getGuild().getId());
+        switch (event.getName()) {
+            case "Get User Score" -> new ContextScoreCommand(event);
+            case "Get User Graph" -> new ContextGraphCommand(event);
         }
     }
 
@@ -58,8 +59,10 @@ public class CommandEvents extends ListenerAdapter {
                 Commands.slash("add", "Adds to a Users Score")
                         .addOptions(
                                 new OptionData(OptionType.USER, "user", "User to add score to", true),
-                                new OptionData(OptionType.INTEGER, "textscore", "Textscore to add"),
+                                new OptionData(OptionType.INTEGER, "textmessages", "Textmessages to add"),
                                 new OptionData(OptionType.INTEGER, "voiceseconds", "Amount of Seconds to add")),
+                Commands.user("Get User Score"),
+                Commands.user("Get User Graph"),
                 Commands.slash("ping", "Retrieve the Bots ping")
         ).queue();
     }

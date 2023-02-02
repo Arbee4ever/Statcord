@@ -8,5 +8,13 @@
   {
     "id": "data",
     "deleteonleave": true
+  },
+  {
+    "id": "roles",
+    "roles": []
+  },
+  {
+    "id": "errors",
+    "errors": []
   }
 ]

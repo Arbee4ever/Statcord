@@ -1,4 +1,4 @@
-package de.arbeeco.statcord.commands;
+package de.arbeeco.statcord.commands.slash;
 
 import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;

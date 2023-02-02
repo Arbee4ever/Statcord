@@ -17,8 +17,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
-import net.dv8tion.jda.api.utils.ChunkingFilter;
-import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.discordbots.api.client.DiscordBotListAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +26,8 @@ import java.io.*;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class StatcordBot {
     public static ShardManager shardManager;
@@ -39,12 +40,11 @@ public class StatcordBot {
     static MongoClient mongoClient;
     public static MongoDatabase guildsDB;
     public static MongoDatabase configsDB;
+
     //endregion
     public StatcordBot(String[] args) {
-        DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(args[0])
-                .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
-                .setChunkingFilter(ChunkingFilter.ALL)
-                .setMemberCachePolicy(MemberCachePolicy.ALL)
+        DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.create(args[0], GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
+                .disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE, CacheFlag.EMOJI, CacheFlag.STICKER, CacheFlag.CLIENT_STATUS, CacheFlag.ONLINE_STATUS, CacheFlag.SCHEDULED_EVENTS)
                 .setEventPassthrough(true);
 
         shardManager = builder.build();
@@ -68,7 +68,7 @@ public class StatcordBot {
 
         //region Commands
         new Thread(() -> {
-            String line = "";
+            String line;
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             try {
                 while ((line = reader.readLine()) != null) {
@@ -112,6 +112,9 @@ public class StatcordBot {
         connectionString = new ConnectionString(config.get("connection_string").getAsString());
         settings = MongoClientSettings.builder()
                 .applyConnectionString(connectionString)
+                .applyToSocketSettings(builder ->
+                        builder.connectTimeout(10, SECONDS)
+                                .readTimeout(15, SECONDS))
                 .serverApi(ServerApi.builder()
                         .version(ServerApiVersion.V1)
                         .build())
