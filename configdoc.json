@@ -6,6 +6,10 @@
     "cooldown": 45000
   },
   {
+    "id": "messages",
+    "rankup": "{\n  \"content\": `Congrats you made it to Level ${level}!`\n}"
+  },
+  {
     "id": "data",
     "deleteonleave": true
   },

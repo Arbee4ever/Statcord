@@ -3,6 +3,7 @@ package de.arbeeco.statcord.api;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
 import de.arbeeco.statcord.StatcordBot;
@@ -17,10 +18,11 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class DataApi {
     private final JDA jda;
@@ -149,5 +151,21 @@ public class DataApi {
             respObject.add("members", jsonArray);
             ctx.json(String.valueOf(respObject));
         }
+    }
+
+    public void getLogFiles(Context ctx) {
+        Stream logFiles = Stream.of(new File("./logs").listFiles())
+                .filter(file -> !file.isDirectory())
+                .sorted(Comparator.reverseOrder())
+                .map(File::getName);
+        ctx.json(logFiles.toArray());
+        ctx.status(200);
+    }
+
+    public void getLogFile(Context ctx) throws IOException {
+        String filename = ctx.pathParam("{filename}");
+        String logContent = Files.readString(Path.of("./logs/" + filename));
+        ctx.result(logContent);
+        ctx.status(200);
     }
 }
