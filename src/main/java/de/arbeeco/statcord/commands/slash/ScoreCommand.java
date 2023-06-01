@@ -1,10 +1,18 @@
 package de.arbeeco.statcord.commands.slash;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
+import de.arbeeco.statcord.util.StatcordMessage;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.internal.JDAImpl;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -48,12 +56,10 @@ public class ScoreCommand {
         }
 
         timeString = String.join("", hours, minutes, seconds);
-        /*String string = Config.getConfigValue(event.getGuild(), "messages", "scoremsg").getAsString();
-        JDAImpl jda = (JDAImpl)event.getJDA();
-        event.reply(StatcordMessage.fromJson(jda.getEntityBuilder(), string)).queue();*/
-        event.replyEmbeds(new StatcordEmbed()
+        event.reply(StatcordMessage.createMessage(event, "rankup")).queue();
+        /*event.replyEmbeds(new StatcordEmbed()
                         .setDescription(user.getAsMention() + "'s current Score is: **" + (txtscore + vcscore) + "** (**" + txtmessages + "** text, **" + timeString + "** VC).")
                         .build())
-                .queue();
+                .queue();*/
     }
 }

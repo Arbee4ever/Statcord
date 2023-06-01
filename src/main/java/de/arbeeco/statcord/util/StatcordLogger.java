@@ -12,14 +12,12 @@ import java.util.List;
 public class StatcordLogger extends AppenderBase<ILoggingEvent> {
     @Override
     protected void append(ILoggingEvent eventObject) {
-        if (MDC.get("guild.id") != null) {
-            if (eventObject.getLevel().equals(Level.ERROR)) {
-                String guildId = MDC.get("guild.id");
-                Guild guild = StatcordBot.shardManager.getGuildById(guildId);
-                List ranks = (List) Config.getConfigValue(guild, "errors", "errors");
-                ranks.add(eventObject.getThrowableProxy().getMessage());
-                Config.setConfigValue(guild, "errors", "errors", ranks);
-            }
-        }
+        if (MDC.get("guild.id") == null) return;
+        if (!eventObject.getLevel().equals(Level.ERROR)) return;
+        String guildId = MDC.get("guild.id");
+        Guild guild = StatcordBot.shardManager.getGuildById(guildId);
+        List<String> errors = (List<String>) Config.getConfigValue(guild, "errors", "errors");
+        errors.add(eventObject.getThrowableProxy().getMessage());
+        Config.setConfigValue(guild, "errors", "errors", errors);
     }
 }

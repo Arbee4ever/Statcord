@@ -300,10 +300,7 @@ public class Data {
             collection.insertOne(new UserDoc(user));
         }
         Timestamp nowTime = new Timestamp(System.currentTimeMillis());
-        StatcordBot.logger.warn(setMemberValue(user, guild, "voicestart", nowTime).toString());
-        StatcordBot.logger.warn(nowTime.toString());
         Date voicestart = (Date) getMemberValue(user, guild, "voicestart");
-        StatcordBot.logger.warn(voicestart.toString());
         if ((nowTime.getTime() - voicestart.getTime()) >= 10000) {
             StatcordBot.logger.error("Error: nowTime: " + nowTime + " voicestart: " + voicestart + " Name#discriminator: " + user.getName() + "#" + user.getDiscriminator());
         }
