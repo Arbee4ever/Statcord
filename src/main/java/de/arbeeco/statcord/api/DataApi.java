@@ -17,10 +17,12 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class DataApi {
     private final JDA jda;
@@ -149,5 +151,21 @@ public class DataApi {
             respObject.add("members", jsonArray);
             ctx.json(String.valueOf(respObject));
         }
+    }
+
+    public void getLogFiles(Context ctx) {
+        Stream logFiles = Stream.of(new File("./logs").listFiles())
+                .filter(file -> !file.isDirectory())
+                .sorted(Comparator.reverseOrder())
+                .map(File::getName);
+        ctx.json(logFiles.toArray());
+        ctx.status(200);
+    }
+
+    public void getLogFile(Context ctx) throws IOException {
+        String filename = ctx.pathParam("{filename}");
+        String logContent = Files.readString(Path.of("./logs/" + filename));
+        ctx.result(logContent);
+        ctx.status(200);
     }
 }

@@ -60,6 +60,10 @@ public class Api {
                             get("{category}", configApi::getGuildConfigCategory, Permissions.GUILD_CONFIG);
                         });
                     });
+                    path("logs", () -> {
+                        get(dataApi::getLogFiles, Permissions.ADMINISTRATOR);
+                        get("{filename}", dataApi::getLogFile, Permissions.ADMINISTRATOR);
+                    });
                 })
                 .start();
 
@@ -88,11 +92,17 @@ public class Api {
     }
 
     Set<Permissions> getUserRole(Context ctx) {
-        Guild guild = jda.getGuildById(ctx.pathParamAsClass("guildId", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid Guild-ID")));
+        Set<Permissions> userRoles = new HashSet<>();
+        if (Objects.equals(ctx.header("Authorization"), jda.getToken())) {
+            userRoles.add(Permissions.ADMINISTRATOR);
+        }
+        if (!ctx.pathParamMap().containsKey("guildId"))
+            return userRoles;
+        Long guildId = ctx.pathParamAsClass("guildId", Long.class).getOrDefault(0L);
+        Guild guild = jda.getGuildById(guildId);
         if (guild == null) {
             throw new NotFoundResponse("Guild not found");
         }
-        Set<Permissions> userRoles = new HashSet<>();
         if (Objects.equals(ctx.header("Authorization"), jda.getToken()) || Objects.equals(ctx.header("Authorization"), Config.getConfigValue(guild, "auth", "token"))) {
             userRoles.add(Permissions.GUILD_CONFIG);
             return userRoles;
@@ -101,6 +111,7 @@ public class Api {
     }
 
     enum Permissions implements RouteRole {
-        GUILD_CONFIG
+        GUILD_CONFIG,
+        ADMINISTRATOR
     }
 }
