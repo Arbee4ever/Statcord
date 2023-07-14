@@ -33,7 +33,7 @@ public class StatcordBot {
     public static ShardManager shardManager;
     public static Logger logger = LoggerFactory.getLogger(StatcordBot.class);
     //region Config
-    static JsonObject config;
+    public static JsonObject config;
     static FileReader fileReader;
     static ConnectionString connectionString;
     static MongoClientSettings settings;

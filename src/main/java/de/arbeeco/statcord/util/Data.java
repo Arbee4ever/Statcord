@@ -314,10 +314,7 @@ public class Data {
             collection.insertOne(new UserDoc(user));
         }
         Timestamp nowTime = new Timestamp(System.currentTimeMillis());
-        Date voicestart = (Date) getMemberValue(user, guild, "voicestart");
-        if ((nowTime.getTime() - voicestart.getTime()) >= 10000) {
-            StatcordBot.logger.error("Error: nowTime: " + nowTime + " voicestart: " + voicestart + " Name#discriminator: " + user.getName() + "#" + user.getDiscriminator());
-        }
+        setMemberValue(user, guild, "voicestart", nowTime);
     }
 
   public static void awardVcPoints(User user, Guild guild) {
@@ -335,7 +332,7 @@ public class Data {
     }
     appendVoiceHistory(user, guild, false, (int) diff / 1000);
     addVoiceSeconds(user, guild, (int) diff / 1000);
-    //setMemberValue(member, "voicestart", null);
+    setMemberValue(user, guild, "voicestart", null);
   }
 
   public static void addVoiceSeconds(User user, Guild guild, int x) {

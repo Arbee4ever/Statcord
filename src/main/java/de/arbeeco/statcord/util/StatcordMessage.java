@@ -33,10 +33,12 @@ public class StatcordMessage {
     }
     if (embeds != null) {
       for (JsonElement embed : embeds) {
-        JDAImpl jda = (JDAImpl)event.getJDA();
-        EntityBuilder entityBuilder = jda.getEntityBuilder();
-        MessageEmbed messageEmbed = entityBuilder.createMessageEmbed(DataObject.fromJson(embed.toString()));
-        messageCreateBuilder.addEmbeds(messageEmbed);
+        if (embed.getAsJsonObject().size() != 0) {
+          JDAImpl jda = (JDAImpl) event.getJDA();
+          EntityBuilder entityBuilder = jda.getEntityBuilder();
+          MessageEmbed messageEmbed = entityBuilder.createMessageEmbed(DataObject.fromJson(embed.toString()));
+          messageCreateBuilder.addEmbeds(messageEmbed);
+        }
       }
     }
     return messageCreateBuilder.build();
