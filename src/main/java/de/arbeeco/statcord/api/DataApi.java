@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -164,8 +165,24 @@ public class DataApi {
 
     public void getLogFile(Context ctx) throws IOException {
         String filename = ctx.pathParam("{filename}");
-        String logContent = Files.readString(Path.of("./logs/" + filename));
-        ctx.result(logContent);
-        ctx.status(200);
+        Path logFilePath = Paths.get("./logs/" + filename);
+        if (Files.exists(logFilePath)) {
+            String logContent = Files.readString(logFilePath);
+            ctx.result(logContent);
+            ctx.status(200);
+        } else {
+            ctx.status(404);
+        }
+    }
+
+    public void deleteLogFile(Context ctx) throws IOException {
+        String filename = ctx.pathParam("{filename}");
+        Path logFilePath = Paths.get("./logs/" + filename);
+        if (Files.exists(logFilePath)) {
+            Files.delete(logFilePath);
+            ctx.status(204);
+        } else {
+            ctx.status(404);
+        }
     }
 }

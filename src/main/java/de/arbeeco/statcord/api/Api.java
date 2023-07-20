@@ -62,7 +62,10 @@ public class Api {
                     });
                     path("logs", () -> {
                         get(dataApi::getLogFiles, Permissions.ADMINISTRATOR);
-                        get("{filename}", dataApi::getLogFile, Permissions.ADMINISTRATOR);
+                        path("{filename}", () -> {
+                            get(dataApi::getLogFile, Permissions.ADMINISTRATOR);
+                            delete(dataApi::deleteLogFile, Permissions.ADMINISTRATOR);
+                        });
                     });
                 })
                 .start();
