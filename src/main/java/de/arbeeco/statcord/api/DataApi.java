@@ -1,7 +1,5 @@
 package de.arbeeco.statcord.api;
 
-import com.google.api.client.json.Json;
-import com.google.api.client.json.JsonParser;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -11,7 +9,6 @@ import com.mongodb.client.MongoCollection;
 import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
-import de.arbeeco.statcord.util.StatcordLogger;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import net.dv8tion.jda.api.JDA;
@@ -20,8 +17,6 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
-import org.eclipse.jetty.util.IO;
-import org.json.JSONArray;
 
 import java.io.File;
 import java.io.IOException;
