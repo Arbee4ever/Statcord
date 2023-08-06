@@ -1,13 +1,17 @@
 package de.arbeeco.statcord.api;
 
+import com.google.api.client.json.Json;
+import com.google.api.client.json.JsonParser;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
 import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
+import de.arbeeco.statcord.util.StatcordLogger;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import net.dv8tion.jda.api.JDA;
@@ -16,6 +20,8 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
+import org.eclipse.jetty.util.IO;
+import org.json.JSONArray;
 
 import java.io.File;
 import java.io.IOException;
@@ -163,6 +169,24 @@ public class DataApi {
         ctx.status(200);
     }
 
+    public void deleteLogFiles(Context ctx) throws IOException {
+        JsonArray files = new Gson().fromJson(ctx.body(), JsonArray.class);
+        JsonArray deletedFiles = new JsonArray();
+        for (JsonElement file : files) {
+            String filename = file.getAsString();
+            Path logFilePath = Paths.get("./logs/" + filename);
+            if (Files.deleteIfExists(logFilePath)) {
+                deletedFiles.add(file);
+            }
+        }
+        if (!deletedFiles.isEmpty()) {
+            ctx.json(deletedFiles.toString());
+            ctx.status(202);
+        } else {
+            ctx.status(404);
+        }
+    }
+
     public void getLogFile(Context ctx) throws IOException {
         String filename = ctx.pathParam("{filename}");
         Path logFilePath = Paths.get("./logs/" + filename);
@@ -178,8 +202,7 @@ public class DataApi {
     public void deleteLogFile(Context ctx) throws IOException {
         String filename = ctx.pathParam("{filename}");
         Path logFilePath = Paths.get("./logs/" + filename);
-        if (Files.exists(logFilePath)) {
-            Files.delete(logFilePath);
+        if (Files.deleteIfExists(logFilePath)) {
             ctx.status(204);
         } else {
             ctx.status(404);

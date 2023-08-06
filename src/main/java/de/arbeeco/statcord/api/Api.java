@@ -1,11 +1,9 @@
 package de.arbeeco.statcord.api;
 
 import com.google.gson.JsonObject;
-import com.iwebpp.crypto.TweetNaclFast;
 import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Config;
 import io.javalin.Javalin;
-import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
 import io.javalin.plugin.bundled.CorsPluginConfig;
@@ -62,6 +60,7 @@ public class Api {
                     });
                     path("logs", () -> {
                         get(dataApi::getLogFiles, Permissions.ADMINISTRATOR);
+                        delete(dataApi::deleteLogFiles, Permissions.ADMINISTRATOR);
                         path("{filename}", () -> {
                             get(dataApi::getLogFile, Permissions.ADMINISTRATOR);
                             delete(dataApi::deleteLogFile, Permissions.ADMINISTRATOR);
