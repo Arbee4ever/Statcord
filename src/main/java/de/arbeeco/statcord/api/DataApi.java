@@ -170,22 +170,6 @@ public class DataApi {
         ctx.status(200);
     }
 
-    public void getLogFile(Context ctx) throws IOException {
-        String filename = ctx.pathParam("{filename}");
-        String logContent = Files.readString(Path.of("./logs/" + filename));
-        ctx.result(logContent);
-        ctx.status(200);
-    }
-
-    public void getLogFiles(Context ctx) {
-        Stream logFiles = Stream.of(new File("./logs").listFiles())
-                .filter(file -> !file.isDirectory())
-                .sorted(Comparator.reverseOrder())
-                .map(File::getName);
-        ctx.json(logFiles.toArray());
-        ctx.status(200);
-    }
-
     public void deleteLogFiles(Context ctx) throws IOException {
         JsonArray files = new Gson().fromJson(ctx.body(), JsonArray.class);
         JsonArray deletedFiles = new JsonArray();
