@@ -2,6 +2,7 @@ package de.arbeeco.statcord.api;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mongodb.client.AggregateIterable;
@@ -21,6 +22,13 @@ import org.bson.Document;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Stream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -167,5 +175,54 @@ public class DataApi {
         String logContent = Files.readString(Path.of("./logs/" + filename));
         ctx.result(logContent);
         ctx.status(200);
+    }
+
+    public void getLogFiles(Context ctx) {
+        Stream logFiles = Stream.of(new File("./logs").listFiles())
+                .filter(file -> !file.isDirectory())
+                .sorted(Comparator.reverseOrder())
+                .map(File::getName);
+        ctx.json(logFiles.toArray());
+        ctx.status(200);
+    }
+
+    public void deleteLogFiles(Context ctx) throws IOException {
+        JsonArray files = new Gson().fromJson(ctx.body(), JsonArray.class);
+        JsonArray deletedFiles = new JsonArray();
+        for (JsonElement file : files) {
+            String filename = file.getAsString();
+            Path logFilePath = Paths.get("./logs/" + filename);
+            if (Files.deleteIfExists(logFilePath)) {
+                deletedFiles.add(file);
+            }
+        }
+        if (!deletedFiles.isEmpty()) {
+            ctx.json(deletedFiles.toString());
+            ctx.status(202);
+        } else {
+            ctx.status(404);
+        }
+    }
+
+    public void getLogFile(Context ctx) throws IOException {
+        String filename = ctx.pathParam("{filename}");
+        Path logFilePath = Paths.get("./logs/" + filename);
+        if (Files.exists(logFilePath)) {
+            String logContent = Files.readString(logFilePath);
+            ctx.result(logContent);
+            ctx.status(200);
+        } else {
+            ctx.status(404);
+        }
+    }
+
+    public void deleteLogFile(Context ctx) throws IOException {
+        String filename = ctx.pathParam("{filename}");
+        Path logFilePath = Paths.get("./logs/" + filename);
+        if (Files.deleteIfExists(logFilePath)) {
+            ctx.status(204);
+        } else {
+            ctx.status(404);
+        }
     }
 }
