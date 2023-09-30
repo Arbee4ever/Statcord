@@ -22,7 +22,7 @@ public class GuildEvents extends ListenerAdapter {
                 user.openPrivateChannel()
                         .flatMap(privateChannel -> privateChannel.sendMessage("Joined Server: " + guild.getName() + " Membercount:" + (guild.getMemberCount() - 1)))
                         .queue());
-        shardManager.setActivity(Activity.watching(event.getJDA().getGuilds().size() + " Servers."));
+        shardManager.setActivity(Activity.customStatus("Handling " + event.getJDA().getGuilds().size() + " Servers."));
         StatcordBot.updateTopGG();
     }
 
@@ -35,7 +35,7 @@ public class GuildEvents extends ListenerAdapter {
                 user.openPrivateChannel()
                         .flatMap(privateChannel -> privateChannel.sendMessage("Left Server: " + guild.getName() + " Membercount:" + (guild.getMemberCount() - 1)))
                         .queue());
-        shardManager.setActivity(Activity.watching(event.getJDA().getGuilds().size() + " Servers."));
+        shardManager.setActivity(Activity.customStatus("Handling " + event.getJDA().getGuilds().size() + " Servers."));
         StatcordBot.updateTopGG();
     }
 }

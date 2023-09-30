@@ -56,7 +56,7 @@ public class ScoreCommand {
         }
 
         timeString = String.join("", hours, minutes, seconds);
-        event.reply(StatcordMessage.createMessage(event, "rankup")).queue();
+        event.reply(StatcordMessage.getMessage(event, "score")).queue();
         /*event.replyEmbeds(new StatcordEmbed()
                         .setDescription(user.getAsMention() + "'s current Score is: **" + (txtscore + vcscore) + "** (**" + txtmessages + "** text, **" + timeString + "** VC).")
                         .build())

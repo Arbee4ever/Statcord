@@ -3,6 +3,7 @@ package de.arbeeco.statcord.commands.context;
 import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
+import de.arbeeco.statcord.util.StatcordMessage;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 
@@ -45,13 +46,11 @@ public class ContextScoreCommand {
         }
 
         timeString = String.join("", hours, minutes, seconds);
-        /*String string = Config.getConfigValue(event.getGuild(), "messages", "scoremsg").getAsString();
-        JDAImpl jda = (JDAImpl)event.getJDA();
-        event.reply(StatcordMessage.fromJson(jda.getEntityBuilder(), string)).queue();*/
-        event.replyEmbeds(new StatcordEmbed()
+        event.reply(StatcordMessage.getMessage(event, "rankup")).queue();
+        /*event.replyEmbeds(new StatcordEmbed()
                         .setDescription(user.getAsMention() + "'s current Score is: **" + (txtscore + vcscore) + "** (**" + txtmessages + "** text, **" + timeString + "** VC).")
                         .build())
                 .setEphemeral(true)
-                .queue();
+                .queue();*/
     }
 }
