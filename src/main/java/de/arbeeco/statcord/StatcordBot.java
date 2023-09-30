@@ -13,6 +13,8 @@ import com.mongodb.client.MongoDatabase;
 import de.arbeeco.statcord.api.Api;
 import de.arbeeco.statcord.events.*;
 import de.arbeeco.statcord.util.NotificationManager;
+import de.arbeeco.statcord.util.VariablesManager;
+import de.arbeeco.statcord.util.variables.UserMentionVariable;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Guild;
@@ -43,18 +45,19 @@ public class StatcordBot {
   public static Logger logger = LoggerFactory.getLogger(StatcordBot.class);
   //region Config
   public static JsonObject config;
-    static FileReader fileReader;
-    static ConnectionString connectionString;
-    static MongoClientSettings settings;
-    static MongoClient mongoClient;
-    public static MongoDatabase guildsDB;
-    public static MongoDatabase configsDB;
+  static FileReader fileReader;
+  static ConnectionString connectionString;
+  static MongoClientSettings settings;
+  static MongoClient mongoClient;
+  public static MongoDatabase guildsDB;
+  public static MongoDatabase configsDB;
+  public static VariablesManager variablesManager = new VariablesManager();
 
   //endregion
   public StatcordBot(String[] args) {
     DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.create(args[0], GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_VOICE_STATES)
             .disableCache(CacheFlag.ACTIVITY, CacheFlag.EMOJI, CacheFlag.STICKER, CacheFlag.CLIENT_STATUS, CacheFlag.ONLINE_STATUS, CacheFlag.SCHEDULED_EVENTS)
-                .enableCache(CacheFlag.VOICE_STATE)
+            .enableCache(CacheFlag.VOICE_STATE)
             .setEventPassthrough(true);
 
     shardManager = builder.build();

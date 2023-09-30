@@ -115,7 +115,6 @@ public class DataApi {
             guildData.add("values", values);
             respObject.add("guild", guildData);
             MongoCollection<Document> collection = Data.getGuildData(guild);
-            JsonArray jsonArray = new JsonArray();
             int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(0);
             int limit = 100;
             int count = 0;
@@ -130,6 +129,7 @@ public class DataApi {
                     ),
                     new Document("$skip", page * limit),
                     new Document("$limit", limit)));
+            JsonArray jsonArray = new JsonArray();
             for (Document memberData : data) {
                 User user = StatcordBot.shardManager.retrieveUserById(memberData.getString("id")).complete();
                 Member member = guild.getMemberById(memberData.getString("id"));
@@ -143,11 +143,13 @@ public class DataApi {
                 jsonObject.remove("_sum");
                 jsonObject.remove("name");
                 if (member != null) {
-                    jsonObject.addProperty("name", member.getEffectiveName() + "#" + member.getUser().getDiscriminator());
+                    jsonObject.addProperty("name", member.getEffectiveName());
                     jsonObject.addProperty("avatar", member.getEffectiveAvatarUrl());
+                    System.out.println("E " + jsonObject.get("name"));
                 } else if (user != null) {
-                    jsonObject.addProperty("name", user.getName() + "#" + user.getDiscriminator());
+                    jsonObject.addProperty("name", user.getName());
                     jsonObject.addProperty("avatar", user.getAvatarUrl());
+                    System.out.println(jsonObject.get("name"));
                 }
                 jsonObject.addProperty("pos", count + (page * limit));
                 int msgs = jsonObject.remove("textmessages").getAsInt();

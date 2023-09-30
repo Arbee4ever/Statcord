@@ -19,7 +19,7 @@ public class ConnectionEvents extends ListenerAdapter {
     @Override
     public void onReady(@NotNull ReadyEvent event) {
         List<Guild> guilds = event.getJDA().getGuilds();
-        StatcordBot.shardManager.setActivity(Activity.watching(guilds.size() + " Servers."));
+        StatcordBot.shardManager.setActivity(Activity.customStatus("Handling " + guilds.size() + " Servers."));
         StatcordBot.updateTopGG();
         for (Guild guild: guilds) {
             List<VoiceChannel> voiceChannels = guild.getVoiceChannels();

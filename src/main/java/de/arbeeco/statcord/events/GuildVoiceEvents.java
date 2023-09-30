@@ -16,7 +16,7 @@ public class GuildVoiceEvents extends ListenerAdapter {
         if (event.getMember().getUser().isBot()) return;
         if (event.getChannelJoined() != null && event.getChannelLeft() == null) {
             User user = event.getMember().getUser();
-            StatcordBot.logger.info("Someone joined VC! bot=" + user.isBot() + " Name#disciminator: " + user.getName() + "#" + user.getDiscriminator());
+            StatcordBot.logger.info("Someone joined VC! bot=" + user.isBot() + " Name: " + user.getName());
             Date lastjoin = (Date) Data.getMemberValue(event.getMember().getUser(), event.getGuild(), "voicestart");
             if (lastjoin != null) {
                 Date now = new Date();
@@ -30,7 +30,7 @@ public class GuildVoiceEvents extends ListenerAdapter {
         if (event.getChannelJoined() == null && event.getChannelLeft() != null) {
             User user = event.getMember().getUser();
             Date lastjoin = (Date) Data.getMemberValue(event.getMember().getUser(), event.getGuild(), "voicestart");
-            StatcordBot.logger.info("Someone left VC! bot=" + user.isBot() + " Name#disciminator: " + user.getName() + "#" + user.getDiscriminator() + " Joined at: " + lastjoin + " Left at: " + new Timestamp(System.currentTimeMillis()));
+            StatcordBot.logger.info("Someone left VC! bot=" + user.isBot() + " Name: " + user.getName() + " Joined at: " + lastjoin + " Left at: " + new Timestamp(System.currentTimeMillis()));
             Data.awardVcPoints(event.getMember().getUser(), event.getGuild());
         }
     }
