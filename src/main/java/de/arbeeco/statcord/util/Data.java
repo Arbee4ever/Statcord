@@ -339,7 +339,7 @@ public class Data {
     }
     appendVoiceHistory(user, guild, false, (int) diff / 1000);
     addVoiceSeconds(user, guild, (int) diff / 1000);
-    //setMemberValue(member, "voicestart", null);
+    setMemberValue(user, guild, "voicestart", null);
   }
 
   public static void addVoiceSeconds(User user, Guild guild, int x) {
