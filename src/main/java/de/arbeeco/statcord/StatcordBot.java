@@ -13,14 +13,7 @@ import com.mongodb.client.MongoDatabase;
 import de.arbeeco.statcord.api.Api;
 import de.arbeeco.statcord.events.*;
 import de.arbeeco.statcord.util.NotificationManager;
-import io.github.jan.supabase.SupabaseClient;
-import io.github.jan.supabase.SupabaseClientBuilder;
-import io.github.jan.supabase.SupabaseClientBuilderKt;
-import io.github.jan.supabase.SupabaseClientImpl;
-import io.github.jan.supabase.postgrest.Postgrest;
-import io.github.jan.supabase.postgrest.query.PostgrestBuilder;
-import io.javalin.plugin.PluginManager;
-import kotlin.jvm.functions.Function1;
+import io.supabase.SupabaseClient;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Guild;
@@ -44,7 +37,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static io.github.jan.supabase.SupabaseClientBuilderKt.createSupabaseClient;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class StatcordBot {
@@ -146,11 +138,15 @@ public class StatcordBot {
     } catch (FileNotFoundException e) {
       logger.info("config.json missing.");
     }
-    SupabaseClient supabase = createSupabaseClient(
-            "https://zdwghanuysdlfouzyutb.supabase.co",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpkd2doYW51eXNkbGZvdXp5dXRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTYwODU1MjMsImV4cCI6MjAxMTY2MTUyM30.KTJpKYtM9n-KJyPC642pRwsxb7J10gYTnpt9Cj5RV_g",
-
+    SupabaseClient supabaseClient = new SupabaseClient(
+            "https://fnnagnukokumojfoxcvf.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZubmFnbnVrb2t1bW9qZm94Y3ZmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY5NjAzMDA5OCwiZXhwIjoyMDExNjA2MDk4fQ.oBjZvjr5sfoVO2Ff0bkI-vE0cU7jshkxhhpW06_c6hg"
     );
+    try {
+      logger.info("Table: " + supabaseClient.findAll("Guilds"));
+    } catch(Exception e) {
+      logger.info("Error: " + e);
+    }
     connectionString = new ConnectionString(config.get("connection_string").getAsString());
     settings = MongoClientSettings.builder()
             .applyConnectionString(connectionString)
