@@ -6,7 +6,6 @@ import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
 import de.arbeeco.statcord.StatcordBot;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
@@ -199,7 +198,7 @@ public class Data {
     }
   }
 
-  private static void updateRoles(User user, Guild guild, int value, String modified) {
+  private static void updateRoles(Member member, Guild guild, int value, String modified) {
     Object configValue = Config.getConfigValue(guild, "roles", "roles");
     if (configValue == null) return;
     JsonArray ranks = new Gson().toJsonTree(configValue).getAsJsonArray();
@@ -211,7 +210,7 @@ public class Data {
     for (JsonElement possibleRank : ranks) {
       boolean requirementsMet = true;
       for (JsonElement req : possibleRank.getAsJsonObject().get("requirements").getAsJsonArray()) {
-        if (!(req.getAsJsonObject().get("value").getAsInt() <= (int) getMemberValue(user, guild, req.getAsJsonObject().get("id").getAsString()))) {
+        if (!(req.getAsJsonObject().get("value").getAsInt() <= (int) member.get(req.getAsJsonObject().get("id").getAsString()))) {
           requirementsMet = false;
           break;
         }
@@ -232,7 +231,6 @@ public class Data {
       }
     }
 
-    Member member = guild.getMember(user);
     if (member != null) {
       guild.modifyMemberRoles(member, addRoles, removeRoles).queue();
     }
