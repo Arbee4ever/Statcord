@@ -13,7 +13,6 @@ import com.mongodb.client.MongoDatabase;
 import de.arbeeco.statcord.api.Api;
 import de.arbeeco.statcord.events.*;
 import de.arbeeco.statcord.util.NotificationManager;
-import io.supabase.SupabaseClient;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Guild;
@@ -30,6 +29,10 @@ import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Comparator;
@@ -51,6 +54,9 @@ public class StatcordBot {
   public static MongoDatabase guildsDB;
   public static MongoDatabase configsDB;
 
+  public static Connection guildsData;
+  public static Connection configData;
+
   //endregion
   public StatcordBot(String[] args) {
     DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.create(args[0], GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_VOICE_STATES)
@@ -69,7 +75,7 @@ public class StatcordBot {
     );
   }
 
-  public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
+  public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException, SQLException, ClassNotFoundException {
     loadConfig();
     StatcordBot statcordBot = new StatcordBot(args);
     JDA jda = statcordBot.shardManager.retrieveApplicationInfo().getJDA();
@@ -124,28 +130,25 @@ public class StatcordBot {
             break;
           }
         }
-      } catch (IOException e) {
+      } catch (IOException | SQLException | ClassNotFoundException e) {
         e.printStackTrace();
       }
     }).start();
     //endregion
   }
 
-  public static void loadConfig() {
+  public static void loadConfig() throws SQLException, ClassNotFoundException {
     try {
       fileReader = new FileReader("config.json5");
       config = JsonParser.parseReader(fileReader).getAsJsonObject();
     } catch (FileNotFoundException e) {
       logger.info("config.json missing.");
     }
-    SupabaseClient supabaseClient = new SupabaseClient(
-            "https://fnnagnukokumojfoxcvf.supabase.co",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZubmFnbnVrb2t1bW9qZm94Y3ZmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY5NjAzMDA5OCwiZXhwIjoyMDExNjA2MDk4fQ.oBjZvjr5sfoVO2Ff0bkI-vE0cU7jshkxhhpW06_c6hg"
-    );
     try {
-      logger.info("Table: " + supabaseClient.findAll("Guilds"));
-    } catch(Exception e) {
-      logger.info("Error: " + e);
+      guildsData = DriverManager.getConnection(config.get("supabase_connection_string").getAsString());
+      guildsData.setSchema("Guilds");
+    } catch (Exception e) {
+      throw e;
     }
     connectionString = new ConnectionString(config.get("connection_string").getAsString());
     settings = MongoClientSettings.builder()

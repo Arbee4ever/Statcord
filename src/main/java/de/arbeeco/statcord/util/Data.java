@@ -16,6 +16,8 @@ import org.knowm.xchart.XYSeries;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -25,16 +27,43 @@ import java.util.concurrent.TimeUnit;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.text;
 import static de.arbeeco.statcord.StatcordBot.guildsDB;
+import static de.arbeeco.statcord.StatcordBot.guildsData;
 import static java.lang.Math.min;
 
 public class Data {
   //region GuildConfig
   public static void initNewGuildData(Guild guild) {
-    guildsDB.createCollection(guild.getId());
+    try {
+      guildsData.createStatement().executeQuery(
+              "CREATE TABLE guild.getId() " +
+                      "(id bigint not null, " +
+                      "name text null, " +
+                      "textmessages numeric not null, " +
+                      "texthistory numeric[] null, " +
+                      "voiceseconds numeric not null, " +
+                      "voicehistory numeric[] null, " +
+                      "lastmsg timestamp with time zone null, " +
+                      "voicestart timestamp with time zone null, " +
+                      "constraint test_duplicate_pkey primary key (id), " +
+                      "constraint test_duplicate_id_key unique (id)" +
+                      ")"
+      );
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public static MongoCollection<Document> getGuildData(Guild guild) throws IllegalArgumentException {
     return guildsDB.getCollection(guild.getId());
+  }
+
+
+  public static ResultSet getGuildData2(Guild guild) throws IllegalArgumentException {
+    try {
+      return guildsData.createStatement().executeQuery("SELECT *, CAST( (voiceseconds / " + Config.getConfigValue(guild, "values", "vcsecondsperpoint") + " + textmessages / " + Config.getConfigValue(guild, "values", "msgsperpoint") + " ) AS INT) AS SCORE FROM \"" + guild.getId() + "\" ORDER BY SCORE DESC");
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public static boolean deleteGuildData(Guild guild) {
@@ -48,12 +77,19 @@ public class Data {
 
   //region MemberConfig
   public static Object getMemberValue(User user, Guild guild, String valueName) {
-    MongoCollection<Document> collection = guildsDB.getCollection(guild.getId());
+    ResultSet rs = null;
+    try {
+      rs = guildsData.createStatement().executeQuery("SELECT * FROM \"" + guild.getId() + "\" WHERE \"id\" IS " + user.getId());
+      return rs.getString(0);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+    /*MongoCollection<Document> collection = guildsDB.getCollection(guild.getId());
     Document memberDoc = collection.find(eq("id", user.getId())).first();
     if (memberDoc == null) {
       return null;
     }
-    return memberDoc.get(valueName);
+    return memberDoc.get(valueName);*/
   }
 
   public static UpdateResult setMemberValue(User user, Guild guild, String valueName, Object newValue) {
