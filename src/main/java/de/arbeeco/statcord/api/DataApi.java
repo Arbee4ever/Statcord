@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -156,12 +157,25 @@ public class DataApi {
     }
 
     public void getLogFiles(Context ctx) {
-        Stream logFiles = Stream.of(new File("./logs").listFiles())
+        List<File> logFiles = Stream.of(new File("./logs").listFiles())
                 .filter(file -> !file.isDirectory())
                 .sorted(Comparator.reverseOrder())
-                .map(File::getName);
-        ctx.json(logFiles.toArray());
+                .toList();
+        JsonArray fileList = new JsonArray(logFiles.size());
+        for(File file: logFiles) {
+            fileList.add(getFileData(file));
+        }
+        ctx.json(fileList.toString());
         ctx.status(200);
+    }
+
+    public JsonObject getFileData(File file) {
+        JsonObject fileData = new JsonObject();
+        fileData.addProperty("name", file.getName());
+        DecimalFormat df = new DecimalFormat("0.00");
+        double size = (double) file.length() / (1024 * 1024);
+        fileData.addProperty("size", df.format(size) + " mb");
+        return fileData;
     }
 
     public void deleteLogFiles(Context ctx) throws IOException {
