@@ -16,7 +16,7 @@ public class MessageSentEvent extends ListenerAdapter {
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if(event.isWebhookMessage()) return;
         if(event.getMessage().getAuthor().isBot()) return;
-        if (event.getMessage().getMentions().isMentioned(event.getJDA().getSelfUser())) {
+        if (event.getMessage().getMentions().isMentioned(event.getJDA().getSelfUser()) && !event.getMessage().getMentions().mentionsEveryone()) {
             event.getMessage().replyEmbeds(new StatcordEmbed()
                     .setTitle("Quick help:")
                     .setDescription("""
