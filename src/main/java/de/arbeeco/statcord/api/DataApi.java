@@ -174,7 +174,7 @@ public class DataApi {
         fileData.addProperty("name", file.getName());
         DecimalFormat df = new DecimalFormat("0.00");
         double size = (double) file.length() / (1024 * 1024);
-        fileData.addProperty("size", df.format(size) + " mb");
+        fileData.addProperty("size", df.format(size) + "MB");
         return fileData;
     }
 
