@@ -42,4 +42,4 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
-        script: bash scripts/update.sh
+        script: sudo bash scripts/update.sh
