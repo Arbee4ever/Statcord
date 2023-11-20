@@ -39,7 +39,7 @@ public class DataApi {
 
         List<Guild> allGuilds = new ArrayList<>(jda.getGuilds());
         List<String> userId = ctx.queryParams("user");
-        if (userId.size() != 0) {
+        if (!userId.isEmpty()) {
             User user = null;
             if (!Objects.equals(userId.get(0), "")) {
                 user = jda.retrieveUserById(userId.get(0)).complete();
@@ -78,7 +78,7 @@ public class DataApi {
         if (guild == null) {
             ctx.status(404).result("Guild not found");
         } else {
-            if (ctx.queryParams("user").size() != 0) {
+            if (!ctx.queryParams("user").isEmpty()) {
                 User user = jda.retrieveUserById(ctx.queryParamAsClass("user", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid User-ID"))).complete();
                 if (user == null) {
                     ctx.status(404).result("User not found");
@@ -138,10 +138,10 @@ public class DataApi {
                 jsonObject.remove("_sum");
                 jsonObject.remove("name");
                 if (member != null) {
-                    jsonObject.addProperty("name", member.getEffectiveName() + "#" + member.getUser().getDiscriminator());
+                    jsonObject.addProperty("name", member.getEffectiveName());
                     jsonObject.addProperty("avatar", member.getEffectiveAvatarUrl());
                 } else if (user != null) {
-                    jsonObject.addProperty("name", user.getName() + "#" + user.getDiscriminator());
+                    jsonObject.addProperty("name", user.getEffectiveName());
                     jsonObject.addProperty("avatar", user.getAvatarUrl());
                 }
                 jsonObject.addProperty("pos", count + (page * limit));

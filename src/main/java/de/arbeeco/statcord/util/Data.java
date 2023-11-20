@@ -320,7 +320,7 @@ public class Data {
     Date voicestart = (Date) getMemberValue(user, guild, "voicestart");
     StatcordBot.logger.warn(voicestart.toString());
     if ((nowTime.getTime() - voicestart.getTime()) >= 10000) {
-      StatcordBot.logger.error("Error: nowTime: " + nowTime + " voicestart: " + voicestart + " Name#discriminator: " + user.getName() + "#" + user.getDiscriminator());
+      StatcordBot.logger.error("Error: nowTime: " + nowTime + " voicestart: " + voicestart + " Name: " + user.getEffectiveName());
     }
   }
 
