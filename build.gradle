@@ -12,14 +12,14 @@ repositories {
 }
 
 dependencies {
-    implementation 'net.dv8tion:JDA:5.0.0-beta.2'
+    implementation 'net.dv8tion:JDA:5.0.0-beta.18'
     implementation 'org.mongodb:mongodb-driver-sync:4.9.1'
     implementation 'org.knowm.xchart:xchart:3.8.2'
-    implementation 'io.javalin:javalin:5.6.2'
+    implementation 'io.javalin:javalin:5.6.3'
     implementation 'com.google.code.gson:gson:2.10'
     implementation 'ch.qos.logback:logback-classic:1.4.5'
     implementation 'org.discordbots:DBL-Java-Library:2.1.2'
-    implementation 'com.google.auth:google-auth-library-oauth2-http:1.19.0'
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.20.0'
 }
 
 jar {
