@@ -33,5 +33,12 @@ jobs:
     - name: capture build artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: Artifacts
+        name: Build
         path: build/libs/*.jar
+    - name: Run Update Script
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        script: ls
