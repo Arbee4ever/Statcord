@@ -36,6 +36,7 @@ jobs:
         name: Build
         path: build/libs/*.jar
     - name: Run Update Script
+      if: contains(github.ref, "master")
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.HOST }}
