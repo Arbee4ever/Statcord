@@ -24,6 +24,6 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'de.arbeeco.statcord.StatcordBot'
+        attributes 'Main-Class': 'de.arbeeco.statcord.Statcord'
     }
 }
