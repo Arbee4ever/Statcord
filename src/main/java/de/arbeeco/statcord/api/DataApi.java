@@ -6,7 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
-import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.Statcord;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
 import io.javalin.http.BadRequestResponse;
@@ -17,6 +17,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,18 +93,7 @@ public class DataApi {
                 ctx.json(String.valueOf(jsonObject));
                 return;
             }
-            JsonObject guildData = new JsonObject();
-            guildData.addProperty("name", guild.getName());
-            guildData.addProperty("id", guild.getId());
-            guildData.addProperty("icon", guild.getIconId());
-            guildData.addProperty("banner", guild.getBannerId());
-            guildData.addProperty("splash", guild.getSplashId());
-            guildData.addProperty("vanity", guild.getVanityUrl());
-            guildData.addProperty("description", guild.getDescription());
-            guildData.addProperty("membercount", guild.getMemberCount());
-            guildData.addProperty("textcount", guild.getTextChannels().size());
-            guildData.addProperty("voicecount", guild.getVoiceChannels().size());
-            guildData.addProperty("rolecount", guild.getRoles().size());
+            JsonObject guildData = getGuildData(guild);
             JsonObject values = new Gson().toJsonTree(Config.getConfigCategory(guild, "values")).getAsJsonObject();
             values.remove("_id");
             values.remove("id");
@@ -126,7 +116,7 @@ public class DataApi {
                     new Document("$skip", page * limit),
                     new Document("$limit", limit)));
             for (Document memberData : data) {
-                User user = StatcordBot.shardManager.retrieveUserById(memberData.getString("id")).complete();
+                User user = Statcord.shardManager.retrieveUserById(memberData.getString("id")).complete();
                 Member member = guild.getMemberById(memberData.getString("id"));
                 if (member == null && (boolean) Config.getConfigValue(guild, "data", "deleteonleave")) {
                     Data.deleteMemberData(guild, (String) memberData.get("id"));
@@ -154,6 +144,23 @@ public class DataApi {
             respObject.add("members", jsonArray);
             ctx.json(String.valueOf(respObject));
         }
+    }
+
+    @NotNull
+    private static JsonObject getGuildData(Guild guild) {
+        JsonObject guildData = new JsonObject();
+        guildData.addProperty("name", guild.getName());
+        guildData.addProperty("id", guild.getId());
+        guildData.addProperty("icon", guild.getIconId());
+        guildData.addProperty("banner", guild.getBannerId());
+        guildData.addProperty("splash", guild.getSplashId());
+        guildData.addProperty("vanity", guild.getVanityUrl());
+        guildData.addProperty("description", guild.getDescription());
+        guildData.addProperty("membercount", guild.getMemberCount());
+        guildData.addProperty("textcount", guild.getTextChannels().size());
+        guildData.addProperty("voicecount", guild.getVoiceChannels().size());
+        guildData.addProperty("rolecount", guild.getRoles().size());
+        return guildData;
     }
 
     public void getLogFiles(Context ctx) {
