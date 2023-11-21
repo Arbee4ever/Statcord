@@ -28,6 +28,7 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -38,9 +39,9 @@ import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class StatcordBot {
+public class Statcord {
   public static ShardManager shardManager;
-  public static Logger logger = LoggerFactory.getLogger(StatcordBot.class);
+  public static Logger logger = LoggerFactory.getLogger(Statcord.class);
   //region Config
   static JsonObject config;
   static FileReader fileReader;
@@ -54,15 +55,19 @@ public class StatcordBot {
   public static void main(String[] args) {
     try {
       start(args);
-    } catch (IOException e) {
+    } catch (NoSuchFileException e) {
+      logger.warn(e.getFile() + " missing.");
+    } catch (FileNotFoundException e) {
       logger.warn(e.getMessage() + " missing.");
-    } catch (URISyntaxException | InterruptedException e) {
+    } catch (IOException | URISyntaxException | InterruptedException e) {
       throw new RuntimeException(e);
+    } finally {
+      shutdown();
     }
   }
 
   private static void start(String[] args) throws IOException, URISyntaxException, InterruptedException {
-    Runtime.getRuntime().addShutdownHook(new Thread(StatcordBot::shutdown));
+    Runtime.getRuntime().addShutdownHook(new Thread(Statcord::shutdown));
 
     loadConfig();
 

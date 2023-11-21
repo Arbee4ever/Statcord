@@ -4,7 +4,7 @@ import com.google.gson.*;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
-import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.Statcord;
 import io.javalin.http.NotFoundResponse;
 import net.dv8tion.jda.api.entities.Guild;
 import org.bson.Document;
@@ -19,7 +19,7 @@ import static com.mongodb.client.model.Filters.eq;
 
 public class Config {
     public static void newGuildConfig(Guild guild) {
-        MongoCollection<Document> collection = StatcordBot.configsDB.getCollection(guild.getId());
+        MongoCollection<Document> collection = Statcord.configsDB.getCollection(guild.getId());
         try {
             JsonArray obj = (JsonArray) JsonParser.parseReader(new FileReader("configdoc.json"));
             for (JsonElement config : obj) {
@@ -31,12 +31,12 @@ public class Config {
             auth.addProperty("token", UUID.randomUUID().toString());
             collection.insertOne(Document.parse(auth.toString()));
         } catch (FileNotFoundException e) {
-            StatcordBot.logger.error(e.toString());
+            Statcord.logger.error(e.toString());
         }
     }
 
     public static MongoCollection<Document> getGuildConfig(Guild guild) {
-        MongoCollection<Document> collection = StatcordBot.configsDB.getCollection(guild.getId());
+        MongoCollection<Document> collection = Statcord.configsDB.getCollection(guild.getId());
         if (collection.countDocuments() == 0) {
             newGuildConfig(guild);
         } else {
@@ -51,7 +51,7 @@ public class Config {
                     }
                 }
             } catch (FileNotFoundException e) {
-                StatcordBot.logger.error(e.toString());
+                Statcord.logger.error(e.toString());
             }
         }
         return collection;
@@ -83,7 +83,7 @@ public class Config {
     }
 
     public static UpdateResult update(Guild guild, String categoryName, Bson updates) {
-        MongoCollection<Document> collection = StatcordBot.configsDB.getCollection(guild.getId());
+        MongoCollection<Document> collection = Statcord.configsDB.getCollection(guild.getId());
         if (collection.countDocuments() == 0) {
             newGuildConfig(guild);
         }

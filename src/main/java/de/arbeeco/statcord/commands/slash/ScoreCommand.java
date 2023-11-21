@@ -1,6 +1,6 @@
 package de.arbeeco.statcord.commands.slash;
 
-import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.Statcord;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.entities.User;
@@ -21,7 +21,7 @@ public class ScoreCommand {
                             .build())
                     .queue();
             return;
-        } else if (StatcordBot.guildsDB.getCollection(event.getGuild().getId()).find(eq("id", user.getId())).first() == null) {
+        } else if (Statcord.guildsDB.getCollection(event.getGuild().getId()).find(eq("id", user.getId())).first() == null) {
             event.replyEmbeds(new StatcordEmbed()
                             .setDescription("User has not yet been active on this Server and has no score.")
                             .build())

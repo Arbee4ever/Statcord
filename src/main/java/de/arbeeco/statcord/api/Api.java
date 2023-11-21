@@ -1,7 +1,7 @@
 package de.arbeeco.statcord.api;
 
 import com.google.gson.JsonObject;
-import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.Statcord;
 import de.arbeeco.statcord.util.Config;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -35,7 +35,7 @@ public class Api {
         Javalin app = Javalin.create(config -> {
                     config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
                     config.accessManager((handler, context, routeRoles) -> {
-                        if (routeRoles.size() == 0) {
+                        if (routeRoles.isEmpty()) {
                             handler.handle(context);
                             return;
                         }
@@ -86,11 +86,11 @@ public class Api {
                                 return privateChannel.sendMessage("Path: " + ctx.fullUrl() + "\nError: ```" + exception.getMessage() + "```").addFiles(FileUpload.fromData(file));
                             })
                             .queue());
-            if (!file.delete()) StatcordBot.logger.error("Logfile not deleted!");
+            if (!file.delete()) Statcord.logger.error("Logfile not deleted!");
             ctx.json(String.valueOf(errorResp));
         });
 
-        StatcordBot.logger.info("API started: " + Date.from(Instant.now()));
+        Statcord.logger.info("API started: " + Date.from(Instant.now()));
     }
 
     Set<Permissions> getUserRole(Context ctx) {

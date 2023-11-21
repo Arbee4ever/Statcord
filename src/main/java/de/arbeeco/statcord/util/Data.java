@@ -4,7 +4,7 @@ import com.google.gson.*;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
-import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.Statcord;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.XYChart;
-import org.knowm.xchart.XYSeries;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.text;
-import static de.arbeeco.statcord.StatcordBot.guildsDB;
+import static de.arbeeco.statcord.Statcord.guildsDB;
 import static java.lang.Math.min;
 
 public class Data {
@@ -315,12 +314,12 @@ public class Data {
       collection.insertOne(new UserDoc(user));
     }
     Timestamp nowTime = new Timestamp(System.currentTimeMillis());
-    StatcordBot.logger.warn(setMemberValue(user, guild, "voicestart", nowTime).toString());
-    StatcordBot.logger.warn(nowTime.toString());
+    Statcord.logger.warn(setMemberValue(user, guild, "voicestart", nowTime).toString());
+    Statcord.logger.warn(nowTime.toString());
     Date voicestart = (Date) getMemberValue(user, guild, "voicestart");
-    StatcordBot.logger.warn(voicestart.toString());
+    Statcord.logger.warn(voicestart.toString());
     if ((nowTime.getTime() - voicestart.getTime()) >= 10000) {
-      StatcordBot.logger.error("Error: nowTime: " + nowTime + " voicestart: " + voicestart + " Name: " + user.getEffectiveName());
+      Statcord.logger.error("Error: nowTime: " + nowTime + " voicestart: " + voicestart + " Name: " + user.getEffectiveName());
     }
   }
 
