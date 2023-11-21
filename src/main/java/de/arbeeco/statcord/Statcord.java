@@ -61,8 +61,6 @@ public class Statcord {
       logger.warn(e.getMessage() + " missing.");
     } catch (IOException | URISyntaxException | InterruptedException e) {
       throw new RuntimeException(e);
-    } finally {
-      shutdown();
     }
   }
 
