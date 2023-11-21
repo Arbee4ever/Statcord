@@ -24,6 +24,14 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'de.arbeeco.statcord.Statcord'
+        attributes (
+            'Main-Class' : 'de.arbeeco.statcord.Statcord' ,
+            'Implementation-Version' : archiveVersion
+        )
     }
+}
+
+shadowJar {
+    archiveBaseName.set('Statcord')
+    archiveClassifier.set('')
 }

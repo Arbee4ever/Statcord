@@ -65,6 +65,8 @@ public class Statcord {
   }
 
   private static void start(String[] args) throws IOException, URISyntaxException, InterruptedException {
+    String version = Statcord.class.getPackage().getImplementationVersion();
+    logger.info("Starting bot with Version: " + (version != null ? version : "DEVELOPMENT"));
     Runtime.getRuntime().addShutdownHook(new Thread(Statcord::shutdown));
 
     loadConfig();
