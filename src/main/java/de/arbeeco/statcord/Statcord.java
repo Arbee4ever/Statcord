@@ -88,7 +88,7 @@ public class Statcord {
     JDA jda = shardManager.retrieveApplicationInfo().getJDA();
     new Api(jda);
 
-    String notificationJson = Files.readString(Path.of("./notification.json"));
+    String notificationJson = Files.readString(Path.of("./notifications/notification.json"));
     String pattern = "HH:mm:ss M.d.yy";
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
     notificationJson = notificationJson.replace("$timenow", simpleDateFormat.format(Date.from(Instant.now())));
