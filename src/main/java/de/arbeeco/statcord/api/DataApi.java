@@ -4,10 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
-import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.Statcord;
 import de.arbeeco.statcord.util.Config;
 import de.arbeeco.statcord.util.Data;
 import io.javalin.http.BadRequestResponse;
@@ -18,17 +17,15 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
 import java.util.stream.Stream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -44,7 +41,7 @@ public class DataApi {
 
         List<Guild> allGuilds = new ArrayList<>(jda.getGuilds());
         List<String> userId = ctx.queryParams("user");
-        if (userId.size() != 0) {
+        if (!userId.isEmpty()) {
             User user = null;
             if (!Objects.equals(userId.get(0), "")) {
                 user = jda.retrieveUserById(userId.get(0)).complete();
@@ -83,7 +80,7 @@ public class DataApi {
         if (guild == null) {
             ctx.status(404).result("Guild not found");
         } else {
-            if (ctx.queryParams("user").size() != 0) {
+            if (!ctx.queryParams("user").isEmpty()) {
                 User user = jda.retrieveUserById(ctx.queryParamAsClass("user", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid User-ID"))).complete();
                 if (user == null) {
                     ctx.status(404).result("User not found");
@@ -97,18 +94,7 @@ public class DataApi {
                 ctx.json(String.valueOf(jsonObject));
                 return;
             }
-            JsonObject guildData = new JsonObject();
-            guildData.addProperty("name", guild.getName());
-            guildData.addProperty("id", guild.getId());
-            guildData.addProperty("icon", guild.getIconId());
-            guildData.addProperty("banner", guild.getBannerId());
-            guildData.addProperty("splash", guild.getSplashId());
-            guildData.addProperty("vanity", guild.getVanityUrl());
-            guildData.addProperty("description", guild.getDescription());
-            guildData.addProperty("membercount", guild.getMemberCount());
-            guildData.addProperty("textcount", guild.getTextChannels().size());
-            guildData.addProperty("voicecount", guild.getVoiceChannels().size());
-            guildData.addProperty("rolecount", guild.getRoles().size());
+            JsonObject guildData = getGuildData(guild);
             JsonObject values = new Gson().toJsonTree(Config.getConfigCategory(guild, "values")).getAsJsonObject();
             values.remove("_id");
             values.remove("id");
@@ -131,7 +117,7 @@ public class DataApi {
                     new Document("$limit", limit)));
             JsonArray jsonArray = new JsonArray();
             for (Document memberData : data) {
-                User user = StatcordBot.shardManager.retrieveUserById(memberData.getString("id")).complete();
+                User user = Statcord.shardManager.retrieveUserById(memberData.getString("id")).complete();
                 Member member = guild.getMemberById(memberData.getString("id"));
                 if (member == null && (boolean) Config.getConfigValue(guild, "data", "deleteonleave")) {
                     Data.deleteMemberData(guild, (String) memberData.get("id"));
@@ -145,11 +131,9 @@ public class DataApi {
                 if (member != null) {
                     jsonObject.addProperty("name", member.getEffectiveName());
                     jsonObject.addProperty("avatar", member.getEffectiveAvatarUrl());
-                    System.out.println("E " + jsonObject.get("name"));
                 } else if (user != null) {
-                    jsonObject.addProperty("name", user.getName());
+                    jsonObject.addProperty("name", user.getEffectiveName());
                     jsonObject.addProperty("avatar", user.getAvatarUrl());
-                    System.out.println(jsonObject.get("name"));
                 }
                 jsonObject.addProperty("pos", count + (page * limit));
                 int msgs = jsonObject.remove("textmessages").getAsInt();
@@ -163,13 +147,43 @@ public class DataApi {
         }
     }
 
+    @NotNull
+    private static JsonObject getGuildData(Guild guild) {
+        JsonObject guildData = new JsonObject();
+        guildData.addProperty("name", guild.getName());
+        guildData.addProperty("id", guild.getId());
+        guildData.addProperty("icon", guild.getIconId());
+        guildData.addProperty("banner", guild.getBannerId());
+        guildData.addProperty("splash", guild.getSplashId());
+        guildData.addProperty("vanity", guild.getVanityUrl());
+        guildData.addProperty("description", guild.getDescription());
+        guildData.addProperty("membercount", guild.getMemberCount());
+        guildData.addProperty("textcount", guild.getTextChannels().size());
+        guildData.addProperty("voicecount", guild.getVoiceChannels().size());
+        guildData.addProperty("rolecount", guild.getRoles().size());
+        return guildData;
+    }
+
     public void getLogFiles(Context ctx) {
-        Stream logFiles = Stream.of(new File("./logs").listFiles())
+        List<File> logFiles = Stream.of(new File("./logs").listFiles())
                 .filter(file -> !file.isDirectory())
                 .sorted(Comparator.reverseOrder())
-                .map(File::getName);
-        ctx.json(logFiles.toArray());
+                .toList();
+        JsonArray fileList = new JsonArray(logFiles.size());
+        for(File file: logFiles) {
+            fileList.add(getFileData(file));
+        }
+        ctx.json(fileList.toString());
         ctx.status(200);
+    }
+
+    public JsonObject getFileData(File file) {
+        JsonObject fileData = new JsonObject();
+        fileData.addProperty("name", file.getName());
+        DecimalFormat df = new DecimalFormat("0.00");
+        double size = (double) file.length() / (1024 * 1024);
+        fileData.addProperty("size", df.format(size) + "MB");
+        return fileData;
     }
 
     public void deleteLogFiles(Context ctx) throws IOException {

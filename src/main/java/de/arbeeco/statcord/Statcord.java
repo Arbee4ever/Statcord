@@ -30,6 +30,7 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -40,11 +41,11 @@ import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class StatcordBot {
+public class Statcord {
   public static ShardManager shardManager;
-  public static Logger logger = LoggerFactory.getLogger(StatcordBot.class);
+  public static Logger logger = LoggerFactory.getLogger(Statcord.class);
   //region Config
-  public static JsonObject config;
+  static JsonObject config;
   static FileReader fileReader;
   static ConnectionString connectionString;
   static MongoClientSettings settings;
@@ -54,7 +55,26 @@ public class StatcordBot {
   public static VariablesManager variablesManager = new VariablesManager();
 
   //endregion
-  public StatcordBot(String[] args) {
+
+  public static void main(String[] args) {
+    try {
+      start(args);
+    } catch (NoSuchFileException e) {
+      logger.warn(e.getFile() + " missing.");
+    } catch (FileNotFoundException e) {
+      logger.warn(e.getMessage() + " missing.");
+    } catch (IOException | URISyntaxException | InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static void start(String[] args) throws IOException, URISyntaxException, InterruptedException {
+    String version = Statcord.class.getPackage().getImplementationVersion();
+    logger.info("Starting bot with Version: " + (version != null ? version : "DEVELOPMENT"));
+    Runtime.getRuntime().addShutdownHook(new Thread(Statcord::shutdown));
+
+    loadConfig();
+
     DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.create(args[0], GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_VOICE_STATES)
             .disableCache(CacheFlag.ACTIVITY, CacheFlag.EMOJI, CacheFlag.STICKER, CacheFlag.CLIENT_STATUS, CacheFlag.ONLINE_STATUS, CacheFlag.SCHEDULED_EVENTS)
             .enableCache(CacheFlag.VOICE_STATE)
@@ -70,19 +90,14 @@ public class StatcordBot {
             new MessageSentEvent(),
             new CommandEvents()
     );
-  }
-
-  public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
-    loadConfig();
-    StatcordBot statcordBot = new StatcordBot(args);
-    JDA jda = statcordBot.shardManager.retrieveApplicationInfo().getJDA();
+    JDA jda = shardManager.retrieveApplicationInfo().getJDA();
     new Api(jda);
 
-    String notificationJson = Files.readString(Path.of("./notification.json"));
+    String notificationJson = Files.readString(Path.of("./notifications/notification.json"));
     String pattern = "HH:mm:ss M.d.yy";
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
     notificationJson = notificationJson.replace("$timenow", simpleDateFormat.format(Date.from(Instant.now())));
-    Stream logFiles = Stream.of(new File("./logs").listFiles())
+    Stream<String> logFiles = Stream.of(new File("./logs").listFiles())
             .filter(file -> !file.isDirectory())
             .sorted(Comparator.reverseOrder())
             .map(File::getName);
@@ -116,14 +131,8 @@ public class StatcordBot {
             mongoClient.close();
             loadConfig();
           } else if (line.equalsIgnoreCase("exit")) {
-            if (shardManager != null) {
-              shardManager.setStatus(OnlineStatus.OFFLINE);
-              shardManager.shutdown();
-              mongoClient.close();
-              logger.info("Bot shutdown at: " + Date.from(Instant.now()));
-              System.exit(0);
-            }
             reader.close();
+            System.exit(0);
             break;
           }
         }
@@ -134,13 +143,18 @@ public class StatcordBot {
     //endregion
   }
 
-  public static void loadConfig() {
-    try {
-      fileReader = new FileReader("config.json5");
-      config = JsonParser.parseReader(fileReader).getAsJsonObject();
-    } catch (FileNotFoundException e) {
-      logger.info("config.json missing.");
+  private static void shutdown() {
+    if (shardManager != null) {
+      shardManager.setStatus(OnlineStatus.OFFLINE);
+      shardManager.shutdown();
+      mongoClient.close();
+      logger.info("Bot shutdown at: " + Date.from(Instant.now()));
     }
+  }
+
+  public static void loadConfig() throws FileNotFoundException {
+    fileReader = new FileReader("config.json5");
+    config = JsonParser.parseReader(fileReader).getAsJsonObject();
     connectionString = new ConnectionString(config.get("connection_string").getAsString());
     settings = MongoClientSettings.builder()
             .applyConnectionString(connectionString)

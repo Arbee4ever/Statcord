@@ -13,14 +13,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public class NotificationManager {
-  GoogleCredentials credentials = GoogleCredentials
-          .fromStream(new FileInputStream("./google_api_credentials.json"))
-          .createScoped("https://www.googleapis.com/auth/firebase.messaging");
-
-  public NotificationManager() throws IOException {
-  }
-
-  public HttpResponse<String> sendNotification(JsonObject body) throws InterruptedException, URISyntaxException, IOException {
+  public HttpResponse<String> sendNotification(JsonObject body) throws IOException, URISyntaxException, InterruptedException {
+    GoogleCredentials credentials = GoogleCredentials
+            .fromStream(new FileInputStream("./google_api_credentials.json"))
+            .createScoped("https://www.googleapis.com/auth/firebase.messaging");
     credentials.refreshIfExpired();
     AccessToken token = credentials.getAccessToken();
     HttpClient client = HttpClient.newHttpClient();

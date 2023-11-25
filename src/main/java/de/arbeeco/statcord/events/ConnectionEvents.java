@@ -1,6 +1,6 @@
 package de.arbeeco.statcord.events;
 
-import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.Statcord;
 import de.arbeeco.statcord.util.Data;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
@@ -19,8 +19,8 @@ public class ConnectionEvents extends ListenerAdapter {
     @Override
     public void onReady(@NotNull ReadyEvent event) {
         List<Guild> guilds = event.getJDA().getGuilds();
-        StatcordBot.shardManager.setActivity(Activity.customStatus("Handling " + guilds.size() + " Servers."));
-        StatcordBot.updateTopGG();
+        Statcord.shardManager.setActivity(Activity.customStatus("Handling " + guilds.size() + " Servers."));
+        Statcord.updateTopGG();
         for (Guild guild: guilds) {
             List<VoiceChannel> voiceChannels = guild.getVoiceChannels();
             for (VoiceChannel voiceChannel: voiceChannels) {
