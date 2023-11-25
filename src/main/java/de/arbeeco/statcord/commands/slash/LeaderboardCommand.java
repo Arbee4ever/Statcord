@@ -2,7 +2,7 @@ package de.arbeeco.statcord.commands.slash;
 
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
-import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.Statcord;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -33,7 +33,7 @@ public class LeaderboardCommand {
                 new Document("$limit", 10L)));
         for (Document memberData : data) {
             count++;
-            User user = StatcordBot.shardManager.retrieveUserById(memberData.get("id").toString()).complete();
+            User user = Statcord.shardManager.retrieveUserById(memberData.get("id").toString()).complete();
             int txtscore = Data.getTextScore(user, guild);
             int vcscore = Data.getVoiceScore(user, guild);
             int vcseconds = Data.getVoiceSeconds(user, guild);
@@ -52,7 +52,7 @@ public class LeaderboardCommand {
             }
 
             timeString = String.join("", hours, minutes, seconds);
-            description = description + count + ". " + StatcordBot.shardManager.retrieveUserById(memberData.get("id").toString()).complete().getAsMention() + ": **" + (txtscore + vcscore) + "** (**" + txtscore + "** text, **" + timeString + "** VC).\n";
+            description = description + count + ". " + Statcord.shardManager.retrieveUserById(memberData.get("id").toString()).complete().getAsMention() + ": **" + (txtscore + vcscore) + "** (**" + txtscore + "** text, **" + timeString + "** VC).\n";
         }
         embed.setDescription(description);
         event.replyEmbeds(embed.build()).queue();

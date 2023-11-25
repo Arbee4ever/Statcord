@@ -1,6 +1,6 @@
 package de.arbeeco.statcord.commands.context;
 
-import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.Statcord;
 import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
@@ -15,7 +15,7 @@ import static de.arbeeco.statcord.util.Data.genGraph;
 
 public class ContextGraphCommand {
     public ContextGraphCommand(UserContextInteractionEvent event) {
-        if (StatcordBot.guildsDB.getCollection(event.getGuild().getId()).find(eq("id", event.getTargetMember().getId())).first() == null) {
+        if (Statcord.guildsDB.getCollection(event.getGuild().getId()).find(eq("id", event.getTargetMember().getId())).first() == null) {
             event.replyEmbeds(new StatcordEmbed()
                             .setDescription("User has not yet been active on this Server and has no score.")
                             .build())

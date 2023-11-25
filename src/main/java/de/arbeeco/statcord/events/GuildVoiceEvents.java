@@ -1,6 +1,6 @@
 package de.arbeeco.statcord.events;
 
-import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.Statcord;
 import de.arbeeco.statcord.util.Data;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
@@ -16,7 +16,7 @@ public class GuildVoiceEvents extends ListenerAdapter {
         if (event.getMember().getUser().isBot()) return;
         if (event.getChannelJoined() != null && event.getChannelLeft() == null) {
             User user = event.getMember().getUser();
-            StatcordBot.logger.info("Someone joined VC! bot=" + user.isBot() + " Name: " + user.getName());
+            Statcord.logger.info("Someone joined VC! bot=" + user.isBot() + " Name: " + user.getEffectiveName());
             Date lastjoin = (Date) Data.getMemberValue(event.getMember().getUser(), event.getGuild(), "voicestart");
             if (lastjoin != null) {
                 Date now = new Date();
@@ -30,7 +30,7 @@ public class GuildVoiceEvents extends ListenerAdapter {
         if (event.getChannelJoined() == null && event.getChannelLeft() != null) {
             User user = event.getMember().getUser();
             Date lastjoin = (Date) Data.getMemberValue(event.getMember().getUser(), event.getGuild(), "voicestart");
-            StatcordBot.logger.info("Someone left VC! bot=" + user.isBot() + " Name: " + user.getName() + " Joined at: " + lastjoin + " Left at: " + new Timestamp(System.currentTimeMillis()));
+            Statcord.logger.info("Someone left VC! bot=" + user.isBot() + " Name: " + user.getEffectiveName() + " Joined at: " + lastjoin + " Left at: " + new Timestamp(System.currentTimeMillis()));
             Data.awardVcPoints(event.getMember().getUser(), event.getGuild());
         }
     }
