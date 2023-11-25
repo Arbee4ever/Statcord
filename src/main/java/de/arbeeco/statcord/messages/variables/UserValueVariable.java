@@ -1,9 +1,9 @@
-package de.arbeeco.statcord.util.variables;
+package de.arbeeco.statcord.messages.variables;
 
 import de.arbeeco.statcord.util.Data;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 
-public class UserValueVariable extends GenericVariable{
+public class UserValueVariable extends GenericVariable {
   public UserValueVariable(String name) {
     super(name);
   }

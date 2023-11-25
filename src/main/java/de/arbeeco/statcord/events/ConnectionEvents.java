@@ -16,44 +16,44 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class ConnectionEvents extends ListenerAdapter {
-    @Override
-    public void onReady(@NotNull ReadyEvent event) {
-        List<Guild> guilds = event.getJDA().getGuilds();
-        Statcord.shardManager.setActivity(Activity.customStatus("Handling " + guilds.size() + " Servers."));
-        Statcord.updateTopGG();
-        for (Guild guild: guilds) {
-            List<VoiceChannel> voiceChannels = guild.getVoiceChannels();
-            for (VoiceChannel voiceChannel: voiceChannels) {
-                List<Member> members = voiceChannel.getMembers();
-                for (Member member : members) {
-                    if (member.getUser().isBot()) return;
-                    Data.setVcStart(member.getUser(), guild);
-                }
-            }
+  @Override
+  public void onReady(@NotNull ReadyEvent event) {
+    List<Guild> guilds = event.getJDA().getGuilds();
+    Statcord.shardManager.setActivity(Activity.customStatus("Handling " + guilds.size() + " Servers."));
+    Statcord.updateTopGG();
+    for (Guild guild : guilds) {
+      List<VoiceChannel> voiceChannels = guild.getVoiceChannels();
+      for (VoiceChannel voiceChannel : voiceChannels) {
+        List<Member> members = voiceChannel.getMembers();
+        for (Member member : members) {
+          if (member.getUser().isBot()) return;
+          Data.setVcStart(member.getUser(), guild);
         }
+      }
     }
+  }
 
-    @Override
-    public void onSessionDisconnect(SessionDisconnectEvent event) {
-        awardPoints(event.getJDA());
-    }
+  @Override
+  public void onSessionDisconnect(SessionDisconnectEvent event) {
+    awardPoints(event.getJDA());
+  }
 
-    @Override
-    public void onShutdown(@NotNull ShutdownEvent event) {
-        awardPoints(event.getJDA());
-    }
+  @Override
+  public void onShutdown(@NotNull ShutdownEvent event) {
+    awardPoints(event.getJDA());
+  }
 
-    private void awardPoints(JDA jda) {
-        List<Guild> guilds = jda.getGuilds();
-        for (Guild guild: guilds) {
-            List<VoiceChannel> voiceChannels = guild.getVoiceChannels();
-            for (VoiceChannel voiceChannel : voiceChannels) {
-                List<Member> members = voiceChannel.getMembers();
-                for (Member member : members) {
-                    if (member.getUser().isBot()) return;
-                    Data.awardVcPoints(member.getUser(), guild);
-                }
-            }
+  private void awardPoints(JDA jda) {
+    List<Guild> guilds = jda.getGuilds();
+    for (Guild guild : guilds) {
+      List<VoiceChannel> voiceChannels = guild.getVoiceChannels();
+      for (VoiceChannel voiceChannel : voiceChannels) {
+        List<Member> members = voiceChannel.getMembers();
+        for (Member member : members) {
+          if (member.getUser().isBot()) return;
+          Data.awardVcPoints(member.getUser(), guild);
         }
+      }
     }
+  }
 }

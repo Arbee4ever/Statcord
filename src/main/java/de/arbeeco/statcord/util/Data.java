@@ -1,6 +1,9 @@
 package de.arbeeco.statcord.util;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;

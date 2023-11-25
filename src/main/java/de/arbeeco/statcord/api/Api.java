@@ -24,96 +24,96 @@ import java.util.Set;
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class Api {
-    public static DataApi dataApi;
-    public static ConfigApi configApi;
-    JDA jda;
+  public static DataApi dataApi;
+  public static ConfigApi configApi;
+  JDA jda;
 
-    public Api(JDA jda) {
-        this.jda = jda;
-        dataApi = new DataApi(jda);
-        configApi = new ConfigApi(jda);
-        Javalin app = Javalin.create(config -> {
-                    config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
-                    config.accessManager((handler, context, routeRoles) -> {
-                        if (routeRoles.isEmpty()) {
-                            handler.handle(context);
-                            return;
+  public Api(JDA jda) {
+    this.jda = jda;
+    dataApi = new DataApi(jda);
+    configApi = new ConfigApi(jda);
+    Javalin app = Javalin.create(config -> {
+              config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
+              config.accessManager((handler, context, routeRoles) -> {
+                if (routeRoles.isEmpty()) {
+                  handler.handle(context);
+                  return;
+                }
+                Set<Permissions> userRoles = getUserRole(context);
+                if (userRoles.containsAll(routeRoles)) {
+                  handler.handle(context);
+                } else {
+                  context.status(401).result("Unauthorized");
+                }
+              });
+            })
+            .routes(() -> {
+              get(ctx -> ctx.result("Hello World"));
+              path("guilds", () -> {
+                get(dataApi::getGuilds);
+                path("{guildId}", () -> {
+                  get(dataApi::getGuildById);
+                  get("config", configApi::getGuildConfig, Permissions.GUILD_CONFIG);
+                  patch("{category}", configApi::setGuildConfig, Permissions.GUILD_CONFIG);
+                  get("{category}", configApi::getGuildConfigCategory, Permissions.GUILD_CONFIG);
+                });
+              });
+              path("logs", () -> {
+                get(dataApi::getLogFiles, Permissions.ADMINISTRATOR);
+                delete(dataApi::deleteLogFiles, Permissions.ADMINISTRATOR);
+                path("{filename}", () -> {
+                  get(dataApi::getLogFile, Permissions.ADMINISTRATOR);
+                  delete(dataApi::deleteLogFile, Permissions.ADMINISTRATOR);
+                });
+              });
+            })
+            .start();
+
+    app.exception(Exception.class, (exception, ctx) -> {
+      JsonObject errorResp = new JsonObject();
+      errorResp.addProperty("error", "An Error occurred and the Dev is already informed.");
+      File file = new File("ERROR.log");
+      jda.retrieveUserById(391979592883372042L).queue(user ->
+              user.openPrivateChannel()
+                      .flatMap(privateChannel -> {
+                        PrintStream ps;
+                        try {
+                          ps = new PrintStream(file);
+                        } catch (FileNotFoundException e) {
+                          throw new RuntimeException(e);
                         }
-                        Set<Permissions> userRoles = getUserRole(context);
-                        if (userRoles.containsAll(routeRoles)) {
-                            handler.handle(context);
-                        } else {
-                            context.status(401).result("Unauthorized");
-                        }
-                    });
-                })
-                .routes(() -> {
-                    get(ctx -> ctx.result("Hello World"));
-                    path("guilds", () -> {
-                        get(dataApi::getGuilds);
-                        path("{guildId}", () -> {
-                            get(dataApi::getGuildById);
-                            get("config", configApi::getGuildConfig, Permissions.GUILD_CONFIG);
-                            patch("{category}", configApi::setGuildConfig, Permissions.GUILD_CONFIG);
-                            get("{category}", configApi::getGuildConfigCategory, Permissions.GUILD_CONFIG);
-                        });
-                    });
-                    path("logs", () -> {
-                        get(dataApi::getLogFiles, Permissions.ADMINISTRATOR);
-                        delete(dataApi::deleteLogFiles, Permissions.ADMINISTRATOR);
-                        path("{filename}", () -> {
-                            get(dataApi::getLogFile, Permissions.ADMINISTRATOR);
-                            delete(dataApi::deleteLogFile, Permissions.ADMINISTRATOR);
-                        });
-                    });
-                })
-                .start();
+                        exception.printStackTrace(ps);
+                        return privateChannel.sendMessage("Path: " + ctx.fullUrl() + "\nError: ```" + exception.getMessage() + "```").addFiles(FileUpload.fromData(file));
+                      })
+                      .queue());
+      if (!file.delete()) Statcord.logger.error("Logfile not deleted!");
+      ctx.json(String.valueOf(errorResp));
+    });
 
-        app.exception(Exception.class, (exception, ctx) -> {
-            JsonObject errorResp = new JsonObject();
-            errorResp.addProperty("error", "An Error occurred and the Dev is already informed.");
-            File file = new File("ERROR.log");
-            jda.retrieveUserById(391979592883372042L).queue(user ->
-                    user.openPrivateChannel()
-                            .flatMap(privateChannel -> {
-                                PrintStream ps;
-                                try {
-                                    ps = new PrintStream(file);
-                                } catch (FileNotFoundException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                exception.printStackTrace(ps);
-                                return privateChannel.sendMessage("Path: " + ctx.fullUrl() + "\nError: ```" + exception.getMessage() + "```").addFiles(FileUpload.fromData(file));
-                            })
-                            .queue());
-            if (!file.delete()) Statcord.logger.error("Logfile not deleted!");
-            ctx.json(String.valueOf(errorResp));
-        });
+    Statcord.logger.info("API started: " + Date.from(Instant.now()));
+  }
 
-        Statcord.logger.info("API started: " + Date.from(Instant.now()));
+  Set<Permissions> getUserRole(Context ctx) {
+    Set<Permissions> userRoles = new HashSet<>();
+    if (Objects.equals(ctx.header("Authorization"), jda.getToken())) {
+      userRoles.add(Permissions.ADMINISTRATOR);
     }
-
-    Set<Permissions> getUserRole(Context ctx) {
-        Set<Permissions> userRoles = new HashSet<>();
-        if (Objects.equals(ctx.header("Authorization"), jda.getToken())) {
-            userRoles.add(Permissions.ADMINISTRATOR);
-        }
-        if (!ctx.pathParamMap().containsKey("guildId"))
-            return userRoles;
-        Long guildId = ctx.pathParamAsClass("guildId", Long.class).getOrDefault(0L);
-        Guild guild = jda.getGuildById(guildId);
-        if (guild == null) {
-            throw new NotFoundResponse("Guild not found");
-        }
-        if (Objects.equals(ctx.header("Authorization"), jda.getToken()) || Objects.equals(ctx.header("Authorization"), Config.getConfigValue(guild, "auth", "token"))) {
-            userRoles.add(Permissions.GUILD_CONFIG);
-            return userRoles;
-        }
-        return userRoles;
+    if (!ctx.pathParamMap().containsKey("guildId"))
+      return userRoles;
+    Long guildId = ctx.pathParamAsClass("guildId", Long.class).getOrDefault(0L);
+    Guild guild = jda.getGuildById(guildId);
+    if (guild == null) {
+      throw new NotFoundResponse("Guild not found");
     }
-
-    enum Permissions implements RouteRole {
-        GUILD_CONFIG,
-        ADMINISTRATOR
+    if (Objects.equals(ctx.header("Authorization"), jda.getToken()) || Objects.equals(ctx.header("Authorization"), Config.getConfigValue(guild, "auth", "token"))) {
+      userRoles.add(Permissions.GUILD_CONFIG);
+      return userRoles;
     }
+    return userRoles;
+  }
+
+  enum Permissions implements RouteRole {
+    GUILD_CONFIG,
+    ADMINISTRATOR
+  }
 }
