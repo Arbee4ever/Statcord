@@ -1,6 +1,5 @@
 package de.arbeeco.statcord.events;
 
-import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;

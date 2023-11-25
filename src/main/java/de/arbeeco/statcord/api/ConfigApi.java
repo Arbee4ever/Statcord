@@ -1,24 +1,18 @@
 package de.arbeeco.statcord.api;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.mongodb.client.FindIterable;
-import de.arbeeco.statcord.StatcordBot;
 import de.arbeeco.statcord.util.Config;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import org.bson.Document;
-import org.bson.UuidRepresentation;
-import org.bson.codecs.*;
 
-import java.util.Base64;
-import java.util.LinkedHashMap;
 import java.util.Map;
-
-import static java.util.Arrays.asList;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
-import static org.bson.codecs.configuration.CodecRegistries.withUuidRepresentation;
 
 public class ConfigApi {
   private final JDA jda;

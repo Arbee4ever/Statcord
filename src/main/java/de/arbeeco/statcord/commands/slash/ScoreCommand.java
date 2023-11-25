@@ -3,6 +3,7 @@ package de.arbeeco.statcord.commands.slash;
 import de.arbeeco.statcord.Statcord;
 import de.arbeeco.statcord.util.Data;
 import de.arbeeco.statcord.util.StatcordEmbed;
+import de.arbeeco.statcord.util.StatcordMessage;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 

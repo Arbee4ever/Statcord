@@ -2,12 +2,8 @@ package de.arbeeco.statcord.messages;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import de.arbeeco.statcord.StatcordBot;
+import de.arbeeco.statcord.Statcord;
 import de.arbeeco.statcord.util.Config;
-import de.arbeeco.statcord.util.Data;
-import de.arbeeco.statcord.util.variables.UserMentionVariable;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 
 import javax.annotation.Nullable;
@@ -40,7 +36,7 @@ public class MessageType {
     StringBuilder sb = new StringBuilder();
     while (matcher.find()) {
       String name = matcher.group().substring(2, matcher.group().length()-1);
-      matcher.appendReplacement(sb, StatcordBot.variablesManager.get(name, event));
+      matcher.appendReplacement(sb, Statcord.variablesManager.get(name, event));
     }
     matcher.appendTail(sb);
     return new Gson().fromJson(sb.toString(), JsonObject.class);
