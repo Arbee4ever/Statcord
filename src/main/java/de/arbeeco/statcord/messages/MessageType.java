@@ -35,7 +35,7 @@ public class MessageType {
 
     StringBuilder sb = new StringBuilder();
     while (matcher.find()) {
-      String name = matcher.group().substring(2, matcher.group().length()-1);
+      String name = matcher.group().substring(2, matcher.group().length() - 1);
       matcher.appendReplacement(sb, Statcord.variablesManager.get(name, event));
     }
     matcher.appendTail(sb);

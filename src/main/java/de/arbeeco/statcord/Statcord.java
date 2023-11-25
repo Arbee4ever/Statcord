@@ -14,7 +14,6 @@ import de.arbeeco.statcord.api.Api;
 import de.arbeeco.statcord.events.*;
 import de.arbeeco.statcord.util.NotificationManager;
 import de.arbeeco.statcord.util.VariablesManager;
-import de.arbeeco.statcord.util.variables.UserMentionVariable;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Guild;

@@ -1,4 +1,4 @@
-package de.arbeeco.statcord.util.variables;
+package de.arbeeco.statcord.messages.variables;
 
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 

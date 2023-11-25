@@ -1,9 +1,9 @@
 package de.arbeeco.statcord.util;
 
-import de.arbeeco.statcord.util.variables.GenericVariable;
-import de.arbeeco.statcord.util.variables.ScoreVariable;
-import de.arbeeco.statcord.util.variables.UserMentionVariable;
-import de.arbeeco.statcord.util.variables.UserValueVariable;
+import de.arbeeco.statcord.messages.variables.GenericVariable;
+import de.arbeeco.statcord.messages.variables.ScoreVariable;
+import de.arbeeco.statcord.messages.variables.UserMentionVariable;
+import de.arbeeco.statcord.messages.variables.UserValueVariable;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 
 import java.util.HashMap;
