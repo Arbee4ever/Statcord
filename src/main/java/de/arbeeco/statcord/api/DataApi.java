@@ -145,10 +145,6 @@ public class DataApi {
           jsonObject.addProperty("avatar", user.getAvatarUrl());
         }
         jsonObject.addProperty("pos", count + (page * limit));
-        int msgs = jsonObject.remove("textmessages").getAsInt();
-        int vcseconds = jsonObject.remove("voiceseconds").getAsInt();
-        jsonObject.addProperty("textmessages", msgs);
-        jsonObject.addProperty("voiceseconds", vcseconds);
         jsonArray.add(jsonObject);
       }
       respObject.add("members", jsonArray);
