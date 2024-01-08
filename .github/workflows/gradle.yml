@@ -17,7 +17,7 @@ permissions:
   contents: read
 
 jobs:
-  - build:
+  build:
 
     runs-on: ubuntu-latest
 
@@ -36,7 +36,7 @@ jobs:
         name: Build
         path: build/libs/*.jar
         
-  - deploy:
+  deploy:
   
     runs-on: ubuntu-latest
     
