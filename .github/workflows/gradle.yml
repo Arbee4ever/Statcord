@@ -17,7 +17,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  - build:
 
     runs-on: ubuntu-latest
 
@@ -35,6 +35,12 @@ jobs:
       with:
         name: Build
         path: build/libs/*.jar
+        
+  - deploy:
+  
+    runs-on: ubuntu-latest
+    
+    steps: 
     - name: Run Update Script
       if: contains(github.ref, 'master')
       uses: appleboy/ssh-action@v1.0.0
