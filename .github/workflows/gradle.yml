@@ -44,7 +44,7 @@ jobs:
     steps: 
     - name: Run Update Script
       if: contains(github.ref, 'master')
-      uses: appleboy/ssh-action@v1.0.0
+      uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
