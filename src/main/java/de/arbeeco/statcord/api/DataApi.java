@@ -84,14 +84,12 @@ public class DataApi {
         if (user == null) {
           ctx.status(404).result("User not found");
           return;
-        } else if (guild.getMemberById(user.getId()) == null) {
-          ctx.status(404).result("Member not found");
+        } else if (guild.getMemberById(user.getId()) != null) {
+          JsonObject jsonObject = new JsonObject();
+          jsonObject.addProperty("moderator", guild.getMemberById(user.getId()).hasPermission(Permission.MANAGE_SERVER));
+          ctx.json(String.valueOf(jsonObject));
           return;
         }
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("moderator", guild.getMemberById(user.getId()).hasPermission(Permission.MANAGE_SERVER));
-        ctx.json(String.valueOf(jsonObject));
-        return;
       }
       JsonObject guildData = getGuildData(guild);
       JsonObject values = new Gson().toJsonTree(Config.getConfigCategory(guild, "values")).getAsJsonObject();
