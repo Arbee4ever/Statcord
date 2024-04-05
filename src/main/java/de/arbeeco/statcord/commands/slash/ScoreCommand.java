@@ -7,10 +7,12 @@ import de.arbeeco.statcord.util.StatcordMessage;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
+import java.io.IOException;
+
 import static com.mongodb.client.model.Filters.eq;
 
 public class ScoreCommand {
-  public ScoreCommand(SlashCommandInteractionEvent event) {
+  public ScoreCommand(SlashCommandInteractionEvent event) throws IOException {
     if (!event.isFromGuild()) return;
     User user = event.getUser();
     if (event.getOption("user") != null) {

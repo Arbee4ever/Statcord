@@ -7,10 +7,12 @@ import de.arbeeco.statcord.util.StatcordMessage;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 
+import java.io.IOException;
+
 import static com.mongodb.client.model.Filters.eq;
 
 public class ContextScoreCommand {
-  public ContextScoreCommand(UserContextInteractionEvent event) {
+  public ContextScoreCommand(UserContextInteractionEvent event) throws IOException {
     User user = event.getTargetMember().getUser();
     if (user.isBot()) {
       event.replyEmbeds(new StatcordEmbed()
