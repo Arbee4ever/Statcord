@@ -13,19 +13,25 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 
+import java.io.IOException;
+
 public class CommandEvents extends ListenerAdapter {
 
   @Override
   public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
     if (!event.isFromGuild()) return;
     MDC.put("guild.id", event.getGuild().getId());
-    switch (event.getName()) {
-      case "score" -> new ScoreCommand(event);
-      case "graph" -> new GraphCommand(event);
-      case "leaderboard" -> new LeaderboardCommand(event);
-      case "resetdata" -> new ResetDataCommand(event);
-      case "add" -> new AddCommand(event);
-      case "ping" -> new PingCommand(event);
+    try {
+      switch (event.getName()) {
+        case "score" -> new ScoreCommand(event);
+        case "graph" -> new GraphCommand(event);
+        case "leaderboard" -> new LeaderboardCommand(event);
+        case "resetdata" -> new ResetDataCommand(event);
+        case "add" -> new AddCommand(event);
+        case "ping" -> new PingCommand(event);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -33,9 +39,13 @@ public class CommandEvents extends ListenerAdapter {
   public void onUserContextInteraction(UserContextInteractionEvent event) {
     if (!event.isFromGuild()) return;
     MDC.put("guild.id", event.getGuild().getId());
-    switch (event.getName()) {
-      case "Get User Score" -> new ContextScoreCommand(event);
-      case "Get User Graph" -> new ContextGraphCommand(event);
+    try {
+      switch (event.getName()) {
+        case "Get User Score" -> new ContextScoreCommand(event);
+        case "Get User Graph" -> new ContextGraphCommand(event);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 

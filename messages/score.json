@@ -1,0 +1,13 @@
+{
+  "default": {
+    "name": "score",
+    "embeds": [
+      {
+        "type": "rich",
+        "color": 7297196,
+        "description": "${userping}'s current Score is: ${score} (${textmessages} text, ${voiceseconds} VC)."
+      }
+    ]
+  },
+  "variables": ["userping", "score", "textmessages", "voiceseconds"]
+}

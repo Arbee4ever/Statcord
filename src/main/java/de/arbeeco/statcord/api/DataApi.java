@@ -37,13 +37,14 @@ public class DataApi {
 
   public void getGuilds(Context ctx) {
     JsonObject respArr = new JsonObject();
+    JsonObject userInfo = new Gson().fromJson(ctx.header("user"), JsonObject.class);
 
     List<Guild> allGuilds = new ArrayList<>(jda.getGuilds());
-    List<String> userId = ctx.queryParams("user");
-    if (!userId.isEmpty()) {
+    if (userInfo != null) {
+      String userId = userInfo.get("id").getAsString();
       User user = null;
-      if (!Objects.equals(userId.get(0), "")) {
-        user = jda.retrieveUserById(userId.get(0)).complete();
+      if (!Objects.equals(userId, "")) {
+        user = jda.retrieveUserById(userId).complete();
       }
       if (user != null) {
         List<Guild> mutGuilds = new ArrayList<>(jda.getMutualGuilds(user));
@@ -76,25 +77,20 @@ public class DataApi {
   public void getGuildById(Context ctx) {
     Guild guild = jda.getGuildById(ctx.pathParamAsClass("guildId", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid Guild-ID")));
     JsonObject respObject = new JsonObject();
+    JsonObject userInfo = new Gson().fromJson(ctx.header("user"), JsonObject.class);
     if (guild == null) {
       ctx.status(404).result("Guild not found");
     } else {
-      if (!ctx.queryParams("user").isEmpty()) {
-        User user = jda.retrieveUserById(ctx.queryParamAsClass("user", Long.class).getOrThrow(error -> new BadRequestResponse("Invalid User-ID"))).complete();
-        if (user == null) {
-          ctx.status(404).result("User not found");
-          return;
-        } else if (guild.getMemberById(user.getId()) == null) {
-          ctx.status(404).result("Member not found");
-          return;
-        }
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("moderator", guild.getMemberById(user.getId()).hasPermission(Permission.MANAGE_SERVER));
-        ctx.json(String.valueOf(jsonObject));
-        return;
-      }
+
       JsonObject guildData = getGuildData(guild);
       JsonObject values = new Gson().toJsonTree(Config.getConfigCategory(guild, "values")).getAsJsonObject();
+      if (userInfo != null) {
+        String userId = userInfo.get("id").getAsString();
+        User user = jda.retrieveUserById(userId).complete();
+        if (user != null && guild.getMemberById(user.getId()) != null) {
+          guildData.addProperty("moderator", guild.getMemberById(user.getId()).hasPermission(Permission.MANAGE_SERVER));
+        }
+      }
       values.remove("_id");
       values.remove("id");
       guildData.add("values", values);

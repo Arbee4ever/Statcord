@@ -1,16 +1,22 @@
 package de.arbeeco.statcord.api;
 
-import com.google.gson.JsonObject;
+import com.google.gson.*;
+import com.google.gson.stream.MalformedJsonException;
 import de.arbeeco.statcord.Statcord;
 import de.arbeeco.statcord.util.Config;
 import io.javalin.Javalin;
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
 import io.javalin.plugin.bundled.CorsPluginConfig;
 import io.javalin.security.RouteRole;
+import io.javalin.validation.Validator;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,6 +40,7 @@ public class Api {
     configApi = new ConfigApi(jda);
     Javalin app = Javalin.create(config -> {
               config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
+              config.plugins.enableRouteOverview("/");
               config.accessManager((handler, context, routeRoles) -> {
                 if (routeRoles.isEmpty()) {
                   handler.handle(context);
@@ -53,7 +60,7 @@ public class Api {
                 get(dataApi::getGuilds);
                 path("{guildId}", () -> {
                   get(dataApi::getGuildById);
-                  get("config", configApi::getGuildConfig, Permissions.GUILD_CONFIG);
+                  get("config", configApi::getGuildConfig, Permissions.GUILD_CONFIG, Permissions.ADMINISTRATOR);
                   patch("{category}", configApi::setGuildConfig, Permissions.GUILD_CONFIG);
                   get("{category}", configApi::getGuildConfigCategory, Permissions.GUILD_CONFIG);
                 });
@@ -105,7 +112,7 @@ public class Api {
     if (guild == null) {
       throw new NotFoundResponse("Guild not found");
     }
-    if (Objects.equals(ctx.header("Authorization"), jda.getToken()) || Objects.equals(ctx.header("Authorization"), Config.getConfigValue(guild, "auth", "token"))) {
+    if (Objects.equals(ctx.header("Authorization"), jda.getToken()) /*|| Objects.equals(ctx.header("Authorization"), Config.getConfigValue(guild, "auth", "token"))*/) {
       userRoles.add(Permissions.GUILD_CONFIG);
       return userRoles;
     }

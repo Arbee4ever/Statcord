@@ -1,48 +1,12 @@
 package de.arbeeco.statcord.messages;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import de.arbeeco.statcord.Statcord;
-import de.arbeeco.statcord.util.Config;
-import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
+public enum MessageType {
+  DEFAULT("default_messages"),
+  CUSTOM("messages");
 
-import javax.annotation.Nullable;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+  public final String label;
 
-public class MessageType {
-  private final String name;
-  private final String[] variables;
-  String patternString = "";
-  Pattern pattern;
-
-  public MessageType(String name, @Nullable String... variables) {
-    this.name = name;
-    this.variables = variables;
-    if (variables != null && variables.length > 0) {
-      patternString = Pattern.quote("${" + variables[0] + "}");
-      for (int i = 1; i < variables.length; i++) {
-        patternString = patternString.concat("|" + Pattern.quote("${" + variables[i] + "}"));
-      }
-      patternString = "(" + patternString + ")";
-    }
-    pattern = Pattern.compile(patternString);
-  }
-
-  public JsonObject getMessage(GenericInteractionCreateEvent event) {
-    String message = new Gson().toJson(Config.getConfigValue(event.getGuild(), "messages", name));
-    Matcher matcher = pattern.matcher(message);
-
-    StringBuilder sb = new StringBuilder();
-    while (matcher.find()) {
-      String name = matcher.group().substring(2, matcher.group().length() - 1);
-      matcher.appendReplacement(sb, Statcord.variablesManager.get(name, event));
-    }
-    matcher.appendTail(sb);
-    return new Gson().fromJson(sb.toString(), JsonObject.class);
-  }
-
-  public String[] getVariables() {
-    return variables;
+  private MessageType(String label) {
+    this.label = label;
   }
 }
