@@ -3,7 +3,7 @@
     "token": "fuzP1j0NSwOyS6Z2xwypIN:APA91bEqyX0CFdsI3OK7vaQd9pHmBUl7abqU4OnkqZWcoV9bJS0nXmoI_dnrAr3ZsGGrW4wlL9WhS2YStKJYFUKOCQkbY2DFqKI_1KgYKrDEb79nCK8cN88P-1synJMY8rHHuUxNzBk0",
     "android": {
       "notification": {
-        "title": "Statcord Bot Started!",
+        "title": "Statcord Bot Started! test",
         "body": "Successfully started Bot at $timenow",
         "tag": "statcord_start",
         "click_action": "OPEN_LOG",
