@@ -37,7 +37,11 @@ public class DataApi {
 
   public void getGuilds(Context ctx) {
     JsonObject respArr = new JsonObject();
-    JsonObject userInfo = new Gson().fromJson(ctx.header("user"), JsonObject.class);
+    JsonObject userInfo = null;
+    Statcord.logger.info(ctx.headerMap().toString());
+    if (!Objects.equals(ctx.header("user"), "null")) {
+      userInfo = new Gson().fromJson(ctx.header("user"), JsonObject.class);
+    }
 
     List<Guild> allGuilds = new ArrayList<>(jda.getGuilds());
     if (userInfo != null) {
