@@ -1,22 +1,15 @@
 package de.arbeeco.statcord.api;
 
-import com.google.gson.*;
-import com.google.gson.stream.MalformedJsonException;
+import com.google.gson.JsonObject;
 import de.arbeeco.statcord.Statcord;
-import de.arbeeco.statcord.util.Config;
 import io.javalin.Javalin;
-import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
 import io.javalin.plugin.bundled.CorsPluginConfig;
 import io.javalin.security.RouteRole;
-import io.javalin.validation.Validator;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.utils.FileUpload;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
