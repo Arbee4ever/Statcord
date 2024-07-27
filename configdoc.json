@@ -6,9 +6,6 @@
     "cooldown": 45000
   },
   {
-    "_id": {
-      "$oid": "646fc7686fc146537d2e7d14"
-    },
     "id": "messages",
     "default_messages": [
       {

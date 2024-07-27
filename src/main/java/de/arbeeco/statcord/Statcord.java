@@ -107,7 +107,7 @@ public class Statcord {
     if (notificationResponse.statusCode() == 200) {
       logger.info("Successfully sent start notification!");
     } else {
-      logger.info("Failed to send start notification:\n" + notificationResponse.body());
+      logger.warn("Failed to send start notification:\n" + notificationResponse.body());
     }
 
     logger.info("Start: " + Date.from(Instant.now()));
