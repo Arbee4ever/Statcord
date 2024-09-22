@@ -32,6 +32,9 @@ public class Api {
         this.jda = jda;
         dataApi = new DataApi(jda);
         configApi = new ConfigApi(jda);
+        
+        ConcurrencyUtil.INSTANCE.setUseLoom(false);
+        
         Javalin app = Javalin.create(config -> {
                     config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
                     config.accessManager((handler, context, routeRoles) -> {
@@ -67,7 +70,7 @@ public class Api {
                         });
                     });
                 })
-                .start();
+                .start(8080);
 
         app.exception(Exception.class, (exception, ctx) -> {
             JsonObject errorResp = new JsonObject();
