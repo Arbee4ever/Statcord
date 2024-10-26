@@ -2,11 +2,13 @@ package de.arbeeco.statcord.api;
 
 import com.google.gson.JsonObject;
 import de.arbeeco.statcord.Statcord;
+import de.arbeeco.statcord.util.Config;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
 import io.javalin.plugin.bundled.CorsPluginConfig;
 import io.javalin.security.RouteRole;
+import io.javalin.util.ConcurrencyUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -31,6 +33,9 @@ public class Api {
     this.jda = jda;
     dataApi = new DataApi(jda);
     configApi = new ConfigApi(jda);
+
+    ConcurrencyUtil.INSTANCE.setUseLoom(false);
+
     Javalin app = Javalin.create(config -> {
               config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
               config.plugins.enableRouteOverview("/");
@@ -67,7 +72,7 @@ public class Api {
                 });
               });
             })
-            .start();
+            .start(8080);
 
     app.exception(Exception.class, (exception, ctx) -> {
       JsonObject errorResp = new JsonObject();
@@ -105,7 +110,7 @@ public class Api {
     if (guild == null) {
       throw new NotFoundResponse("Guild not found");
     }
-    if (Objects.equals(ctx.header("Authorization"), jda.getToken()) /*|| Objects.equals(ctx.header("Authorization"), Config.getConfigValue(guild, "auth", "token"))*/) {
+    if (Objects.equals(ctx.header("Authorization"), jda.getToken()) || Objects.equals(ctx.header("Authorization"), Config.getConfigValue(guild, "auth", "token"))) {
       userRoles.add(Permissions.GUILD_CONFIG);
       return userRoles;
     }
