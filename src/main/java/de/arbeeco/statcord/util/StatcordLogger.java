@@ -62,7 +62,7 @@ public class StatcordLogger extends AppenderBase<ILoggingEvent> {
             JsonObject body = new Gson().fromJson(notificationJson, JsonObject.class);
             HttpResponse<String> notificationResponse;
             try {
-                notificationResponse = new NotificationManager().sendNotification(body);
+                notificationResponse = Statcord.notificationManager.sendNotification(body);
             } catch (IOException | URISyntaxException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
