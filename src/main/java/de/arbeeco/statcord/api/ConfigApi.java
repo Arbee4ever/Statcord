@@ -2,7 +2,6 @@ package de.arbeeco.statcord.api;
 
 import com.google.gson.*;
 import com.mongodb.client.FindIterable;
-import de.arbeeco.statcord.Statcord;
 import de.arbeeco.statcord.util.Config;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
@@ -35,7 +34,6 @@ public class ConfigApi {
     JsonObject object = JsonParser.parseString(ctx.body()).getAsJsonObject();
     removeEmptyElements(object);
     removeEmptyElements(object);
-    Statcord.logger.info(object.toString());
     Document doc = Document.parse(String.valueOf(object));
     doc.forEach((name, value) -> Config.setConfigValue(guild, categoryName, name, value));
     ctx.json(String.valueOf(getConfig(ctx)));
