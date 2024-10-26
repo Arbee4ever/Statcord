@@ -8,6 +8,7 @@ import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
 import io.javalin.plugin.bundled.CorsPluginConfig;
 import io.javalin.security.RouteRole;
+import io.javalin.util.ConcurrencyUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -32,6 +33,9 @@ public class Api {
         this.jda = jda;
         dataApi = new DataApi(jda);
         configApi = new ConfigApi(jda);
+        
+        ConcurrencyUtil.INSTANCE.setUseLoom(false);
+        
         Javalin app = Javalin.create(config -> {
                     config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
                     config.accessManager((handler, context, routeRoles) -> {
@@ -67,7 +71,7 @@ public class Api {
                         });
                     });
                 })
-                .start();
+                .start(8080);
 
         app.exception(Exception.class, (exception, ctx) -> {
             JsonObject errorResp = new JsonObject();
