@@ -42,6 +42,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public class Statcord {
   public static ShardManager shardManager;
   public static Logger logger = LoggerFactory.getLogger(Statcord.class);
+  public static NotificationManager notificationManager;
   //region Config
   static JsonObject config;
   static FileReader fileReader;
@@ -99,7 +100,7 @@ public class Statcord {
     String fileName = logFiles.toArray()[0].toString();
     notificationJson = notificationJson.replace("$filename", fileName);
     JsonObject body = new Gson().fromJson(notificationJson, JsonObject.class);
-    HttpResponse<String> notificationResponse = new NotificationManager().sendNotification(body);
+    HttpResponse<String> notificationResponse = notificationManager.sendNotification(body);
     if (notificationResponse.statusCode() == 200) {
       logger.info("Successfully sent start notification!");
     } else {
@@ -163,6 +164,7 @@ public class Statcord {
     mongoClient = MongoClients.create(settings);
     guildsDB = mongoClient.getDatabase("Guilds");
     configsDB = mongoClient.getDatabase("Configs");
+    notificationManager = new NotificationManager(config.get("firebase_token").getAsString());
   }
 
   public static void updateTopGG() {
