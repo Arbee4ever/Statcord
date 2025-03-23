@@ -12,6 +12,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import static de.arbeeco.statcord.Statcord.logger;
+
 public class NotificationManager {
   String device_token = null;
 
@@ -33,6 +35,7 @@ public class NotificationManager {
             .uri(url)
             .POST(HttpRequest.BodyPublishers.ofString(bodyString))
             .build();
+    logger.info(bodyString);
     return client.send(request, HttpResponse.BodyHandlers.ofString());
   }
 }
