@@ -5,6 +5,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.internal.LinkedTreeMap;
 import de.arbeeco.statcord.Statcord;
 import net.dv8tion.jda.api.entities.Guild;
 import org.slf4j.MDC;
@@ -29,16 +30,20 @@ import static de.arbeeco.statcord.Statcord.logger;
 public class StatcordLogger extends AppenderBase<ILoggingEvent> {
     @Override
     protected void append(ILoggingEvent eventObject) {
-        if (MDC.get("guild.id") != null) {
+        String guildId = MDC.get("guild.id");
+        if (guildId != null) {
             if (eventObject.getLevel().equals(Level.ERROR)) {
-                String guildId = MDC.get("guild.id");
                 Guild guild = Statcord.shardManager.getGuildById(guildId);
                 List errors = (List) Config.getConfigValue(guild, "errors", "errors");
-                errors.add(eventObject.getThrowableProxy().getMessage());
+                LinkedTreeMap<String, Object> error = new LinkedTreeMap<>();
+                error.put("timestamp", eventObject.getTimeStamp());
+                String errorString = eventObject.getThrowableProxy() == null ? "null" : eventObject.getThrowableProxy().getMessage();
+                error.put("message", errorString);
+                errors.addFirst(error);
                 Config.setConfigValue(guild, "errors", "errors", errors);
             }
         }
-        if(eventObject.getLevel().equals(Level.ERROR)) {
+        if (eventObject.getLevel().equals(Level.ERROR)) {
             String notificationJson = null;
             try {
                 notificationJson = Files.readString(Path.of("./notifications/error_notification.json"));
@@ -66,10 +71,10 @@ public class StatcordLogger extends AppenderBase<ILoggingEvent> {
             } catch (IOException | URISyntaxException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
-          if (notificationResponse.statusCode() == 200) {
-                logger.info("Successfully sent start notification!");
+            if (notificationResponse.statusCode() == 200) {
+                logger.info("Successfully sent error notification!");
             } else {
-                logger.info("Failed to send start notification:\n" + notificationResponse.body());
+                logger.info("Failed to send error notification:\n" + notificationResponse.body());
             }
         }
     }
