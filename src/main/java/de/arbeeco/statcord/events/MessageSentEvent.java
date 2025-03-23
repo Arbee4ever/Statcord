@@ -5,6 +5,7 @@ import de.arbeeco.statcord.util.StatcordEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.MDC;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -39,6 +40,7 @@ public class MessageSentEvent extends ListenerAdapter {
             ).mentionRepliedUser(false).queue();
         }
         if (!event.isFromGuild()) return;
+        MDC.put("guild.id", event.getGuild().getId());
         Date lastm = Data.getLastMsg(event.getAuthor(), event.getGuild());
         Calendar zero = new GregorianCalendar();
         zero.set(Calendar.HOUR_OF_DAY, 0);

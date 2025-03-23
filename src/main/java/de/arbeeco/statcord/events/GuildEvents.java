@@ -9,12 +9,14 @@ import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.MDC;
 
 import static de.arbeeco.statcord.Statcord.shardManager;
 
 public class GuildEvents extends ListenerAdapter {
     @Override
     public void onGuildJoin(@NotNull GuildJoinEvent event) {
+        MDC.put("guild.id", event.getGuild().getId());
         Guild guild = event.getGuild();
         JDA jda = event.getJDA();
         Data.initNewGuildData(event.getGuild());
@@ -28,6 +30,7 @@ public class GuildEvents extends ListenerAdapter {
 
     @Override
     public void onGuildLeave(@NotNull GuildLeaveEvent event) {
+        MDC.put("guild.id", event.getGuild().getId());
         Guild guild = event.getGuild();
         JDA jda = event.getJDA();
         Data.deleteGuildData(guild);

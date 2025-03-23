@@ -37,7 +37,10 @@ public class StatcordLogger extends AppenderBase<ILoggingEvent> {
                 List errors = (List) Config.getConfigValue(guild, "errors", "errors");
                 LinkedTreeMap<String, Object> error = new LinkedTreeMap<>();
                 error.put("timestamp", eventObject.getTimeStamp());
-                String errorString = eventObject.getThrowableProxy() == null ? "null" : eventObject.getThrowableProxy().getMessage();
+                String errorString = eventObject.getThrowableProxy() == null ? null : eventObject.getThrowableProxy().getMessage();
+                if (errorString == null) {
+                    errorString = eventObject.getMessage();
+                }
                 error.put("message", errorString);
                 errors.addFirst(error);
                 Config.setConfigValue(guild, "errors", "errors", errors);
