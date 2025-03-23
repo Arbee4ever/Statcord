@@ -235,7 +235,7 @@ public class Data {
 
     Member member = guild.getMember(user);
     if(!guild.getSelfMember().hasPermission(Permission.MANAGE_ROLES)) {
-      logger.error("Cannot set Roles due to missing Permission: \"Manage Roles\"");
+      logger.error("Cannot set Roles due to missing Permission: 'Manage Roles'");
     } else if (member != null) {
       guild.modifyMemberRoles(member, addRoles, removeRoles).queue();
     }

@@ -19,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -59,14 +58,18 @@ public class StatcordLogger extends AppenderBase<ILoggingEvent> {
             }
             String pattern = "HH:mm:ss M.d.yy";
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-            notificationJson = notificationJson.replace("$timenow", simpleDateFormat.format(Date.from(Instant.now())));
+            notificationJson = notificationJson.replace("$timenow", simpleDateFormat.format(new Date(eventObject.getTimeStamp())));
             Stream<String> logFiles = Stream.of(new File("./logs").listFiles())
                     .filter(file -> !file.isDirectory())
                     .sorted(Comparator.reverseOrder())
                     .map(File::getName);
             String fileName = logFiles.toArray()[0].toString();
             notificationJson = notificationJson.replace("$filename", fileName);
-            notificationJson = notificationJson.replace("$error", eventObject.getThrowableProxy().getMessage());
+            if(eventObject.getThrowableProxy() != null) {
+                notificationJson = notificationJson.replace("$error", eventObject.getThrowableProxy().getMessage());
+            } else {
+                notificationJson = notificationJson.replace("$error", eventObject.getMessage());
+            }
             JsonObject body = new Gson().fromJson(notificationJson, JsonObject.class);
             HttpResponse<String> notificationResponse;
             try {
