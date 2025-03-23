@@ -5,6 +5,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
 import de.arbeeco.statcord.Statcord;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -22,8 +23,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.text;
 import static de.arbeeco.statcord.Statcord.guildsDB;
+import static de.arbeeco.statcord.Statcord.logger;
 import static java.lang.Math.min;
 
 public class Data {
@@ -233,7 +234,9 @@ public class Data {
     }
 
     Member member = guild.getMember(user);
-    if (member != null) {
+    if(!guild.getSelfMember().hasPermission(Permission.MANAGE_ROLES)) {
+      logger.error("Cannot set Roles due to missing Permission: \"Manage Roles\"");
+    } else if (member != null) {
       guild.modifyMemberRoles(member, addRoles, removeRoles).queue();
     }
   }

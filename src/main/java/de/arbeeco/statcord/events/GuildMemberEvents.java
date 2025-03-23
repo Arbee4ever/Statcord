@@ -11,10 +11,12 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.MDC;
 
 public class GuildMemberEvents extends ListenerAdapter {
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
+        MDC.put("guild.id", event.getGuild().getId());
         MongoCollection<Document> collection = Data.getGuildData(event.getGuild());
         if (!event.getUser().isBot()) {
             collection.insertOne(new UserDoc(event.getUser()));
@@ -23,6 +25,7 @@ public class GuildMemberEvents extends ListenerAdapter {
 
     @Override
     public void onGuildMemberRemove(@NotNull GuildMemberRemoveEvent event) {
+        MDC.put("guild.id", event.getGuild().getId());
         Guild guild = event.getGuild();
         if (!(boolean)Config.getConfigValue(guild, "data", "deleteonleave")) return;
         Member member = event.getMember();

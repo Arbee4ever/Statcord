@@ -5,6 +5,7 @@ import de.arbeeco.statcord.util.Data;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.slf4j.MDC;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -13,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 public class GuildVoiceEvents extends ListenerAdapter {
     @Override
     public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
+        MDC.put("guild.id", event.getGuild().getId());
         if (event.getMember().getUser().isBot()) return;
         if (event.getChannelJoined() != null && event.getChannelLeft() == null) {
             User user = event.getMember().getUser();
