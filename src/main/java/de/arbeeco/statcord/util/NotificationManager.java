@@ -35,7 +35,6 @@ public class NotificationManager {
             .uri(url)
             .POST(HttpRequest.BodyPublishers.ofString(bodyString))
             .build();
-    logger.info(bodyString);
     return client.send(request, HttpResponse.BodyHandlers.ofString());
   }
 }
