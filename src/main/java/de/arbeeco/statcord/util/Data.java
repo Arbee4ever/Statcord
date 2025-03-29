@@ -1,6 +1,8 @@
 package de.arbeeco.statcord.util;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
@@ -204,7 +206,7 @@ public class Data {
     Object configValue = Config.getConfigValue(guild, "roles", "roles");
     if (configValue == null) return;
     JsonArray ranks = new Gson().toJsonTree(configValue).getAsJsonArray();
-    if (ranks.equals(JsonNull.INSTANCE)) return;
+    if (ranks.equals(new JsonArray())) return;
 
     List<Role> addRoles = new ArrayList<>();
     List<Role> removeRoles = new ArrayList<>();
@@ -234,7 +236,7 @@ public class Data {
     }
 
     Member member = guild.getMember(user);
-    if(!guild.getSelfMember().hasPermission(Permission.MANAGE_ROLES)) {
+    if (!guild.getSelfMember().hasPermission(Permission.MANAGE_ROLES)) {
       logger.error("Cannot set Roles due to missing Permission: 'Manage Roles'");
     } else if (member != null) {
       guild.modifyMemberRoles(member, addRoles, removeRoles).queue();
